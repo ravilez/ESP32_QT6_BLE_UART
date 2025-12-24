@@ -39,8 +39,9 @@ private:
     QBluetoothDeviceDiscoveryAgent *discoveryAgent = nullptr;
     QLowEnergyController *controller = nullptr;
     QLowEnergyService *service = nullptr;
-    QLowEnergyCharacteristic characteristic;
+    QLowEnergyCharacteristic characteristic_tx;
     QLowEnergyCharacteristic characteristic_rx;
+    QLowEnergyCharacteristic characteristic_fs;
     float m_distance = 0;
 
     MainWindow* mainWindow = nullptr;
