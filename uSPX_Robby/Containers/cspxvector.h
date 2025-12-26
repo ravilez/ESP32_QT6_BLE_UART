@@ -1,19 +1,7 @@
 #ifndef CSPXVECTOR_H
 #define CSPXVECTOR_H
 
-#define M_PI 3.1415926536
-
 #include "../Containers//cspxtypes.h"
-
-#ifdef MSVC
-#ifndef __FMA__
-#define __FMA__
-#endif
-#endif
-
-#include <immintrin.h>
-
-typedef union f4_m128 { __m128 mv; float fv[4]; } f4_m128;
 
 struct s_vectorArray
 {
@@ -94,15 +82,11 @@ public:
     friend CSPXVector operator + (const CSPXVector &lval,const CSPXVector &rval);
     // a += a;
     CSPXVector &operator += (const CSPXVector &rval);
-    //optimizer for 128 bit intrinsic op
-    void AddVector4(f4_m128 *result, f4_m128 *lval, f4_m128 *rval);
 
     // c = a - b;
     friend CSPXVector operator - (const CSPXVector &lval, const CSPXVector &rval);
     // a -= b;
     CSPXVector &operator -= (const CSPXVector &rval);
-    //optimizer for 128 bit intrinsic op
-    void SubtractVector4(f4_m128 *result, f4_m128 *lval, f4_m128 *rval);
 
     // Negate -a
     void Negate();
@@ -117,20 +101,16 @@ public:
     friend CSPXVector operator * (double lval,const CSPXVector &rval);
     // y = x*3.;
     CSPXVector operator * (double rval);
-    void MultiplyVector4(f4_m128 *r, f4_m128 *a, f4_m128 *b);
     // x *= 3.
     CSPXVector &operator *= (double rval);
 
     // c = x.Dot(y);
     double Dot(const CSPXVector &rval);
     double operator * (const CSPXVector &rval);
-    //optimizer for 128 bit intrinsic op
-    void DotVector4(f4_m128 *a, f4_m128 *b, float *dp);
 
     // v3 = v1.Cross(v2);
     CSPXVector Cross(const CSPXVector &rval);
     //optimizer for 128 bit intrinsic op
-    void CrossProductVector4(f4_m128 *r, f4_m128 *a, f4_m128 *b);
 
     // A = x->*y;
     friend CSPXMatrix operator ->* (const CSPXVector &lval,const CSPXVector &rval);
@@ -149,8 +129,6 @@ public:
 
     // x.Normalize();
     CSPXVector* Normalize();
-    //optimizer for 128 bit intrinsic op
-    void NormalizeVector4(f4_m128 *a);
     // orders the vector
     void Order();
 
@@ -165,9 +143,6 @@ public: void RotateAbout(CSPXVector &org, CSPXMatrix &rm);
     void VectorArrayMultiplication(struct s_vectorArray *positionArray);
     void VectorArrayAddition(struct s_vectorArray *positionArray);
     void VectorArraySubtraction(struct s_vectorArray *positionArray);
-
-    void TransformArray(f4_m128 *v,f4_m128 *m,f4_m128 *t,unsigned int length);
-    f4_m128 Transform4(f4_m128* mat4, f4_m128 *vec4);
 
     void Matrix_Vector_Mult(float vector[4], float matrix[4][4], int vectorLength, float results[4]);
 

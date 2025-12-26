@@ -1,13 +1,13 @@
 /********************************************************************************
-** Form generated from reading UI file 'mainwindowvblNbz.ui'
+** Form generated from reading UI file 'mainwindowIPHKfq.ui'
 **
-** Created by: Qt User Interface Compiler version 6.9.0
+** Created by: Qt User Interface Compiler version 6.8.2
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
 
-#ifndef MAINWINDOWVBLNBZ_H
-#define MAINWINDOWVBLNBZ_H
+#ifndef MAINWINDOWIPHKFQ_H
+#define MAINWINDOWIPHKFQ_H
 
 #include <QtCore/QVariant>
 #include <QtGui/QIcon>
@@ -185,7 +185,7 @@ public:
         downButton->setObjectName("downButton");
         downButton->setGeometry(QRect(200, 180, 32, 32));
         QIcon icon1;
-        icon1.addFile(QString::fromUtf8(":/DownArrow.png"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
+        icon1.addFile(QString::fromUtf8(":/resource/Images/DownArrow.png"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
         downButton->setIcon(icon1);
         downButton->setIconSize(QSize(32, 32));
         leftButton = new QPushButton(centralwidget);
@@ -278,9 +278,7 @@ public:
         zdownButton = new QPushButton(centralwidget);
         zdownButton->setObjectName("zdownButton");
         zdownButton->setGeometry(QRect(120, 180, 32, 32));
-        QIcon icon5;
-        icon5.addFile(QString::fromUtf8(":/resource/Images/DownArrow.png"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
-        zdownButton->setIcon(icon5);
+        zdownButton->setIcon(icon1);
         zdownButton->setIconSize(QSize(32, 32));
         statusMessage = new QTextEdit(centralwidget);
         statusMessage->setObjectName("statusMessage");
@@ -290,36 +288,36 @@ public:
         leftupButton = new QPushButton(centralwidget);
         leftupButton->setObjectName("leftupButton");
         leftupButton->setGeometry(QRect(170, 120, 32, 32));
-        QIcon icon6;
-        icon6.addFile(QString::fromUtf8(":/resource/Images/LeftUpArrow.png"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
-        leftupButton->setIcon(icon6);
+        QIcon icon5;
+        icon5.addFile(QString::fromUtf8(":/resource/Images/LeftUpArrow.png"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
+        leftupButton->setIcon(icon5);
         leftupButton->setIconSize(QSize(32, 32));
         leftupButton->setAutoDefault(true);
         leftupButton->setFlat(false);
         leftdownButton = new QPushButton(centralwidget);
         leftdownButton->setObjectName("leftdownButton");
         leftdownButton->setGeometry(QRect(170, 180, 32, 32));
-        QIcon icon7;
-        icon7.addFile(QString::fromUtf8(":/resource/Images/LeftDownArrow.png"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
-        leftdownButton->setIcon(icon7);
+        QIcon icon6;
+        icon6.addFile(QString::fromUtf8(":/resource/Images/LeftDownArrow.png"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
+        leftdownButton->setIcon(icon6);
         leftdownButton->setIconSize(QSize(32, 32));
         leftdownButton->setAutoDefault(true);
         leftdownButton->setFlat(false);
         rightupButton = new QPushButton(centralwidget);
         rightupButton->setObjectName("rightupButton");
         rightupButton->setGeometry(QRect(230, 120, 32, 32));
-        QIcon icon8;
-        icon8.addFile(QString::fromUtf8(":/resource/Images/RightUpArrow.png"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
-        rightupButton->setIcon(icon8);
+        QIcon icon7;
+        icon7.addFile(QString::fromUtf8(":/resource/Images/RightUpArrow.png"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
+        rightupButton->setIcon(icon7);
         rightupButton->setIconSize(QSize(32, 32));
         rightupButton->setAutoDefault(true);
         rightupButton->setFlat(false);
         rightdownButton = new QPushButton(centralwidget);
         rightdownButton->setObjectName("rightdownButton");
         rightdownButton->setGeometry(QRect(230, 180, 32, 32));
-        QIcon icon9;
-        icon9.addFile(QString::fromUtf8(":/resource/Images/RightDownArrow.png"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
-        rightdownButton->setIcon(icon9);
+        QIcon icon8;
+        icon8.addFile(QString::fromUtf8(":/resource/Images/RightDownArrow.png"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
+        rightdownButton->setIcon(icon8);
         rightdownButton->setIconSize(QSize(32, 32));
         rightdownButton->setAutoDefault(true);
         rightdownButton->setFlat(false);
@@ -336,9 +334,9 @@ public:
         zhomeButton = new QPushButton(centralwidget);
         zhomeButton->setObjectName("zhomeButton");
         zhomeButton->setGeometry(QRect(120, 150, 32, 32));
-        QIcon icon10;
-        icon10.addFile(QString::fromUtf8(":/resource/Images/ZHome.png"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
-        zhomeButton->setIcon(icon10);
+        QIcon icon9;
+        icon9.addFile(QString::fromUtf8(":/resource/Images/ZHome.png"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
+        zhomeButton->setIcon(icon9);
         zhomeButton->setIconSize(QSize(32, 32));
         resetButton = new QPushButton(centralwidget);
         resetButton->setObjectName("resetButton");
@@ -358,24 +356,24 @@ public:
         setXYHomeButton = new QPushButton(centralwidget);
         setXYHomeButton->setObjectName("setXYHomeButton");
         setXYHomeButton->setGeometry(QRect(390, 20, 32, 32));
-        QIcon icon11;
-        icon11.addFile(QString::fromUtf8(":/resource/Images/Images20x20/newhomexy.jpg"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
-        setXYHomeButton->setIcon(icon11);
+        QIcon icon10;
+        icon10.addFile(QString::fromUtf8(":/resource/Images/newhomexy.jpg"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
+        setXYHomeButton->setIcon(icon10);
         setXYHomeButton->setIconSize(QSize(32, 32));
         setZHomeButton = new QPushButton(centralwidget);
         setZHomeButton->setObjectName("setZHomeButton");
         setZHomeButton->setGeometry(QRect(350, 20, 32, 32));
         setZHomeButton->setAutoFillBackground(false);
-        QIcon icon12;
-        icon12.addFile(QString::fromUtf8(":/resource/Images/Images20x20/newhomez.jpg"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
-        setZHomeButton->setIcon(icon12);
+        QIcon icon11;
+        icon11.addFile(QString::fromUtf8(":/resource/Images/newhomez.jpg"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
+        setZHomeButton->setIcon(icon11);
         setZHomeButton->setIconSize(QSize(32, 32));
         setXYZHomeButton = new QPushButton(centralwidget);
         setXYZHomeButton->setObjectName("setXYZHomeButton");
         setXYZHomeButton->setGeometry(QRect(430, 20, 32, 32));
-        QIcon icon13;
-        icon13.addFile(QString::fromUtf8(":/resource/Images/Images20x20/newhome.jpg"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
-        setXYZHomeButton->setIcon(icon13);
+        QIcon icon12;
+        icon12.addFile(QString::fromUtf8(":/resource/Images/newhome.jpg"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
+        setXYZHomeButton->setIcon(icon12);
         setXYZHomeButton->setIconSize(QSize(32, 32));
         viewSourceFile = new QPushButton(centralwidget);
         viewSourceFile->setObjectName("viewSourceFile");
@@ -393,9 +391,9 @@ public:
         moveWorkpieceToXYHomePositionButton = new QPushButton(centralwidget);
         moveWorkpieceToXYHomePositionButton->setObjectName("moveWorkpieceToXYHomePositionButton");
         moveWorkpieceToXYHomePositionButton->setGeometry(QRect(470, 20, 32, 32));
-        QIcon icon14;
-        icon14.addFile(QString::fromUtf8(":/resource/Images/Images20x20/workpiece2XYHome.jpg"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
-        moveWorkpieceToXYHomePositionButton->setIcon(icon14);
+        QIcon icon13;
+        icon13.addFile(QString::fromUtf8(":/resource/Images/workpiece2XYHome.jpg"), QSize(), QIcon::Mode::Normal, QIcon::State::Off);
+        moveWorkpieceToXYHomePositionButton->setIcon(icon13);
         x0 = new QLabel(centralwidget);
         x0->setObjectName("x0");
         x0->setGeometry(QRect(90, 370, 21, 16));
@@ -542,7 +540,7 @@ public:
 "hr { height: 1px; border-width: 0; }\n"
 "li.unchecked::marker { content: \"\\2610\"; }\n"
 "li.checked::marker { content: \"\\2612\"; }\n"
-"</style></head><body style=\" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
+"</style></head><body style=\" font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'MS Shell Dlg 2'; font-size:8.25pt;\">Error messages</span></p></body></html>", nullptr));
         leftupButton->setText(QString());
         leftdownButton->setText(QString());
@@ -606,4 +604,4 @@ namespace Ui {
 
 QT_END_NAMESPACE
 
-#endif // MAINWINDOWVBLNBZ_H
+#endif // MAINWINDOWIPHKFQ_H

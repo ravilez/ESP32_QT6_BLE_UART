@@ -168,184 +168,6 @@ CSPXVector &CSPXVector::operator = (const CSPXVector &rval)
     return *this;
 }
 
-//arguments must be of size 4*32 bits
-void CSPXVector::AddVector4(f4_m128 *result, f4_m128 *lval, f4_m128 *rval)
-{
-    result->mv = _mm_add_ps(lval->mv,rval->mv);
-
-    /*
-       unsigned long oldEBX;
-
-
-       __asm
-       {
-        mov	    oldEBX, ebx
-
-        mov		eax, lval	// load pointers into cpu regs
-        mov		ebx, rval
-        mov		ecx, result
-        movaps	xmm0, [eax]	// move the vectors to sse regs
-        movaps	xmm1, [ebx]
-        addps	xmm0, xmm1	// add elements
-        movaps	[ecx], xmm0	// save the result vector
-
-        mov	    ebx, oldEBX
-       }*/
-
-}
-
-//arguments must be of size 4*32 bits
-void CSPXVector::SubtractVector4(f4_m128 *result, f4_m128 *lval, f4_m128 *rval)
-{
-
-    result->mv = _mm_sub_ps(lval->mv,rval->mv);
-
-/*
-    unsigned long oldEBX;
-
-    __asm
-    {
-        mov	    oldEBX, ebx
-
-        mov		eax,			lval	// load pointers into cpu regs
-        mov		ebx,			rval
-        mov		ecx,			result
-        movaps	xmm0,			[eax]	// move the vectors to sse regs
-        movaps	xmm1,			[ebx]
-        subps	xmm0,			xmm1	// add elements
-        movaps	[ecx],			xmm0			// save the result vector
-
-        mov	    ebx, oldEBX
-    }
- */
-}
-
-//arguments must be of size 4*32 bits
-// Multiply a vector by a scalar b
-void CSPXVector::MultiplyVector4(f4_m128 *r, f4_m128 *a, f4_m128 *b)
-{
-
-    r->mv = _mm_mul_ps(a->mv,b->mv);
-
-/*
-    __m128 f = _mm_set1_ps(*b);		// Set all 4 elements to b
-    unsigned long oldEBX;
-
-    __asm
-    {
-        mov	    oldEBX, ebx
-
-        mov		eax,			a	// load pointer into cpu reg
-        mov		ebx,			r	// load pointer into cpu reg
-        movaps	xmm0,			[eax]	// move the vectors to sse regs
-        mulps	xmm0,			f		// multiply elements
-        movaps	[ebx],	xmm0	// save the return vector
-
-        mov	    ebx, oldEBX
-    }
- */
-}
-
-//arguments must be of size 4*32 bits
-void CSPXVector::NormalizeVector4(f4_m128 *a)
-{
-    __m128 inverse_norm = _mm_rsqrt_ps(_mm_dp_ps(a->mv, a->mv, 0x77));
-    a->mv = _mm_mul_ps((__m128)(a->mv), inverse_norm);
-
-/*
-    __asm
-    {
-        mov     eax,            a				// load pointer into cpu reg
-        movaps	xmm0,			[eax]			// move the vector to an sse reg
-        movaps	xmm2,			xmm0			// make a copy
-        mulps	xmm0,			xmm0			// square vector elements
-        movaps	xmm1,			xmm0			// make a copy
-        shufps	xmm0,			xmm1,	0x4e	// first addition of elements using shuffle
-        addps	xmm0,			xmm1
-        movaps	xmm1,			xmm0			// make a copy
-        shufps	xmm1,			xmm1,	0x11	// second addition of elements using shuffle
-        addps	xmm0,			xmm1
-        rsqrtps xmm0,			xmm0			// get the reciprocal of the square root
-        mulps	xmm2,			xmm0			// multiply the reciprocal square root by the original vector
-        movaps	[eax],			xmm2			// save the result vector
-    }
- */
-}
-
-void CSPXVector::DotVector4(f4_m128 *a, f4_m128 *b, float *dp)
-{
-    f4_m128 mdp;
-    mdp.mv = _mm_dp_ps(a->mv, b->mv, 0x77);
-    dp = mdp.fv;
-/*
-    __m128 f = _mm_set1_ps(0);		// Set all 4 elements to b
-    __asm
-    {
-        mov		eax,			a			// load pointers into cpu regs
-        mov		ecx,			b
-        movaps	xmm0,			[eax]			// move the vectors to sse regs
-        movaps	xmm1,			[ecx]
-        mulps	xmm0,			xmm1
-        movaps	xmm2,			xmm0
-        shufps	xmm0,			xmm0,	0x4e
-        addps	xmm0,			xmm2
-        shufps	xmm2,			xmm2,	0x11
-        addps	xmm0,			xmm2
-        movaps	f,				xmm0			// save the return vector
-    }
- * dp = *((float*)&f);
- */
-}
-
-// Use sse to calculate the cross product of two 3 element vectors. W should be zero
-void CSPXVector::CrossProductVector4(f4_m128 *r, f4_m128 *a, f4_m128 *b)
-{
-    f4_m128 tmp0, tmp1, tmp2, tmp3;
-    tmp0.mv = _mm_shuffle_ps(a->mv,a->mv,_MM_SHUFFLE(3,0,2,1));
-    tmp1.mv = _mm_shuffle_ps(b->mv,b->mv,_MM_SHUFFLE(3,1,0,2));
-    tmp2.mv = _mm_shuffle_ps(a->mv,a->mv,_MM_SHUFFLE(3,1,0,2));
-    tmp3.mv = _mm_shuffle_ps(b->mv,b->mv,_MM_SHUFFLE(3,0,2,1));
-
-    r->mv = _mm_sub_ps(_mm_mul_ps(tmp0.mv,tmp1.mv),_mm_mul_ps(tmp2.mv,tmp3.mv));
-
-/*    unsigned long oldEBX;
-
-    __asm
-    {
-        mov	    oldEBX, ebx
-
-        mov		eax,			a			// load pointers into cpu regs
-        mov		ebx,			b
-        mov		ecx,			r
-        movaps	xmm0,			[eax]			// move the vectors to sse regs
-        movaps	xmm1,			[ebx]
-        movaps	xmm2,			xmm0
-        movaps	xmm3,			xmm1
-        shufps	xmm0,			xmm0,	0xd8
-        shufps	xmm1,			xmm1,	0xe1
-        mulps	xmm0,			xmm1
-        shufps	xmm2,			xmm2,	0xe1
-        shufps	xmm3,			xmm3,	0xd8
-        mulps	xmm2,			xmm3
-        subps	xmm0,			xmm2
-        movaps	[ecx],			xmm0			       // save the result vector
-
-        mov     ebx, oldEBX
-    }
- */
-}
-
-void CSPXVector::TransformArray(f4_m128 *v,f4_m128 *m,f4_m128 *t, unsigned int length)
-{
-    for (unsigned int i = 0; i < length; i++)
-    {
-        f4_m128 r;
-        //Matrix_Vector_Mult(v[i].fv,&m->fv,4,r.fv);
-        r = Transform4(m,&v[i]);
-        t[i] = r;
-    }
-}
-
 void CSPXVector::Matrix_Vector_Mult(float vector[4], float matrix[4][4], int vectorLength, float results[4])
 {
     float *ptr1=matrix[0];
@@ -371,26 +193,6 @@ void CSPXVector::Matrix_Vector_Mult(float vector[4], float matrix[4][4], int vec
     results[3]=temp4;
 }
 
-f4_m128 CSPXVector::Transform4(f4_m128* mat4, f4_m128 *vec4) {
-
-    f4_m128 x, y, z, w;
-    x.mv = _mm_set1_ps(vec4->fv[0]);
-    y.mv = _mm_set1_ps(vec4->fv[1]);
-    z.mv = _mm_set1_ps(vec4->fv[2]);
-    w.mv = _mm_set1_ps(vec4->fv[3]);
-
-    f4_m128 p1, p2, p3, p4;
-    p1.mv = _mm_mul_ps(x.mv, mat4[0].mv);
-    p2.mv = _mm_add_ps(_mm_mul_ps(y.mv, mat4[1].mv), p1.mv);
-    //p2.mv = _mm_fmadd_ps(y.mv, mat4[1].mv, p1.mv);
-    p3.mv = _mm_mul_ps(z.mv, mat4[2].mv);
-    p4.mv = _mm_add_ps(_mm_mul_ps(w.mv, mat4[3].mv), p3.mv);
-    //p4.mv = _mm_fmadd_ps(w.mv, mat4[3].mv, p3.mv);
-
-    f4_m128 r;
-    r.mv = _mm_add_ps(p2.mv, p4.mv);
-    return r;
-}
 
 // equality operator
 bool operator == (const CSPXVector &lval,const CSPXVector &rval)
@@ -408,15 +210,8 @@ bool operator == (const CSPXVector &lval,const CSPXVector &rval)
 CSPXVector operator + (const CSPXVector &lval,const CSPXVector &rval)
 {
     CSPXVector result(lval.dimension);
-/*    if (lval.dimension==4)
-    {
-        result.AddVector4(result.vector, lval.vector, rval.vector);
-    }
-    else*/
-    {
-        for (int i = 0; i < lval.dimension; i++)
-            result[i] = lval[i] + rval[i];
-    }
+    for (int i = 0; i < lval.dimension; i++)
+        result[i] = lval[i] + rval[i];
     return result;
 }
 
@@ -429,11 +224,6 @@ CSPXVector &CSPXVector::operator += (const CSPXVector &rval)
         maxrows = MIN(dimension,rval.dimension);
     }
 
-/*    if (dimension==4)
-    {
-        AddVector4(vector, vector, rval.vector);
-    }
-    else*/
     {
         for (int i = 0; i < maxrows; i++)
             (*this)[i] = (*this)[i] + rval[i];
@@ -444,11 +234,6 @@ CSPXVector &CSPXVector::operator += (const CSPXVector &rval)
 CSPXVector operator - (const CSPXVector &lval,const CSPXVector &rval)
 {
     CSPXVector result(MIN(lval.dimension,rval.dimension));
-    /*if (result.dimension==4)
-       {
-        result.SubtractVector4(result.vector, lval.vector, rval.vector);
-       }
-       else*/
     {
         for (int i = 0; i < result.dimension; i++)
             result[i] = lval[i] - rval[i];
@@ -461,11 +246,6 @@ CSPXVector &CSPXVector::operator -= (const CSPXVector &rval)
     if(dimension != rval.dimension)
         Error((char*)"");
 
-    /*if (dimension==4)
-       {
-        SubtractVector4(vector, vector, rval.vector);
-       }
-       else*/
     {
         for (int i = 0; i < dimension; i++)
             (*this)[i] = (*this)[i] - rval[i];
@@ -840,7 +620,7 @@ CSPXVector CSPXVector::ParsePointPairs(char** points)
     int len = 0;
     bool f = true;
     char datum[32];
-    while(*ptr != NULL)
+    while(ptr != nullptr)
     {
         if (f)
         {

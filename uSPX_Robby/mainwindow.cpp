@@ -508,9 +508,9 @@ void MainWindow::on_openFileButton_clicked()
         ui->tableView->itemModel->removeRow(rindex+1);
 
         //translate coordinates to home position
-        int xhome = std::round(ui->xHome->value()*40.);
-        int yhome = std::round(ui->yHome->value()*40.);
-        int zhome = std::round(ui->zHome->value()*40.);
+        int xhome = std::lround(ui->xHome->value()*40.);
+        int yhome = std::lround(ui->yHome->value()*40.);
+        int zhome = std::lround(ui->zHome->value()*40.);
 
         ui->xOrigin->setText(QString::number(hpglCommands->x_min/40.)+" mm");
         ui->yOrigin->setText(QString::number(hpglCommands->y_min/40.)+" mm");

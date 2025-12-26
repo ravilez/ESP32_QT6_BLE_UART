@@ -7,6 +7,7 @@
 #include <QMutex>
 #include <QWaitCondition>
 #include <QThread>
+#include <QPen>
 
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
@@ -90,6 +91,7 @@ public slots:
 
     char lastHpglCommand[128];
 
+    QPen whitePen;
 };
 
 class SerialReceiverThread : public QThread
@@ -112,6 +114,7 @@ public:
     QMutex sync;
     QWaitCondition pauseCond;
     bool _pause;
+
 
     CSPXRobbyController *controller;
 };

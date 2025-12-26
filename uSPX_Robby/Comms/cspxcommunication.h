@@ -55,7 +55,7 @@ class CSPXCOMPort: public CSPXCommunicationChannel, public QSerialPort
     public:CSPXCOMPort(const char* port)
         : QSerialPort()
         ,m_threadFunction(nullptr)
-        ,m_baudRate(38400)
+        ,m_baudRate(9600)
         ,m_stopbits(1)
         ,m_parity(0)
         ,m_characters(8)
