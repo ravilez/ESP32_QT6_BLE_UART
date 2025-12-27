@@ -1,9 +1,9 @@
 #include "cspxvector.h"
 
 #include <math.h>
-#include <cstdio>
 #include <stdarg.h>
 #include <cstring>
+#include <stdlib.h>
 
 #include "cspxutility.h"
 #include "cspxvector.h"
@@ -107,7 +107,7 @@ CSPXVector::CSPXVector(int nc, double v1,...)
     if(dimension != 0)
     {
         va_list vl;
-        va_start(vl,nc);
+        va_start(vl,v1);
         (*this)[0] = v1;
         for (int i=1; i<nc; i++)
             //(*this)[i] = va_arg(vl,double);

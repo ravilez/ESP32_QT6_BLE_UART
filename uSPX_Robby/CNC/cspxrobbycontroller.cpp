@@ -61,7 +61,7 @@ void CSPXRobbyController::readData()
             pcoords = strstr((char*)machineDialog->GetController()->response,"X:");
             if (pcoords)
             {
-                sscanf(pcoords,"X: %f;Y: %f;Z: %f;",&x,&y,&z);
+                sscanf_s(pcoords,"X: %f;Y: %f;Z: %f;",&x,&y,&z);
                 machineDialog->ui->x_lcdNumber->display(x);
                 machineDialog->ui->y_lcdNumber->display(y);
                 machineDialog->ui->z_lcdNumber->display(z);
@@ -69,14 +69,14 @@ void CSPXRobbyController::readData()
             pcoords =  strstr((char*)machineDialog->GetController()->response,"Y:");
             if (pcoords)
             {
-                sscanf(pcoords,"Y: %f;Z: %f;",&y,&z);
+                sscanf_s(pcoords,"Y: %f;Z: %f;",&y,&z);
                 machineDialog->ui->y_lcdNumber->display(y);
                 machineDialog->ui->z_lcdNumber->display(z);
             }
             pcoords =  strstr((char*)machineDialog->GetController()->response,"Z:");
             if (pcoords)
             {
-                sscanf(pcoords,"Z: %f;",&z);
+                sscanf_s(pcoords,"Z: %f;",&z);
                 machineDialog->ui->z_lcdNumber->display(z);
             }
         }
@@ -85,7 +85,7 @@ void CSPXRobbyController::readData()
         if (pmode)
         {
             char mod;
-            sscanf(pmode,"MD:%d;",&mod);
+            sscanf_s(pmode,"MD:%d;",&mod,1);
             machineDialog->GetController()->SetMode(mod);
             switch (machineDialog->GetController()->GetMode())
             {
@@ -128,7 +128,7 @@ void CSPXRobbyController::readData()
             const char fmdata[] = { 0x1b, 'M', 'D', ':', 0x0d, 0x1a};
             machineDialog->GetController()->GetComs()->write(fmdata,6);
 
-            machineDialog->GetController()->GetComs()->waitForBytesWritten(30000);
+            machineDialog->GetController()->GetComs()->waitForBytesWritten(300);
         }
 
         pmode = strstr((char*)rec_msg.GetData(),"UC:");
@@ -306,9 +306,9 @@ bool CSPXRobbyController::sendRobbyHpglLineCommand(CSPXString command)
     else if (command == "MoveXY")
     {
         if (machineDialog->ui->toolSafetyCheckBox->isChecked())
-            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PA %d,%d;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->xSpindlePos),std::lround(40.0*machineDialog->ySpindlePos),zTrack,0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PA %ld,%ld;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->xSpindlePos),std::lround(40.0*machineDialog->ySpindlePos),zTrack,0x0d,0x1a);
         else
-            sprintf(lastHpglCommand,"VS %2.1f;PA %d,%d;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->xSpindlePos),std::lround(40.0*machineDialog->ySpindlePos),0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;PA %ld,%ld;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->xSpindlePos),std::lround(40.0*machineDialog->ySpindlePos),0x0d,0x1a);
     }
     else if (command == "MoveXYZHome")
     {
@@ -325,23 +325,23 @@ bool CSPXRobbyController::sendRobbyHpglLineCommand(CSPXString command)
     else if (command == "MoveLeftUp" && machineDialog->ui->x_lcdNumber->value() + machineDialog->ui->xHome->value() > machineDialog->ui->xStep->text().toFloat() && machineDialog->ui->y_lcdNumber->value() + machineDialog->ui->yHome->value() < 400.0 - machineDialog->ui->yStep->text().toFloat())
     {
         if (machineDialog->ui->toolSafetyCheckBox->isChecked())
-            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR -%d,%d;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),zTrack,0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR -%ld,%ld;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),zTrack,0x0d,0x1a);
         else
-            sprintf(lastHpglCommand,"VS %2.1f;PR -%d,%d;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;PR -%ld,%ld;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),0x0d,0x1a);
     }
     else if (command == "MoveLeftDown" && machineDialog->ui->x_lcdNumber->value() + machineDialog->ui->xHome->value() > machineDialog->ui->xStep->text().toFloat() && machineDialog->ui->y_lcdNumber->value() + machineDialog->ui->yHome->value() > machineDialog->ui->yStep->text().toFloat())
     {
         if (machineDialog->ui->toolSafetyCheckBox->isChecked())
-            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR -%d,-%d;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),zTrack,0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR -%ld,-%ld;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),zTrack,0x0d,0x1a);
         else
-            sprintf(lastHpglCommand,"VS %2.1f;PR -%d,-%d;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;PR -%ld,-%ld;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),0x0d,0x1a);
     }
     else if (command == "MoveRightUp" && machineDialog->ui->x_lcdNumber->value() + machineDialog->ui->xHome->value() + machineDialog->ui->xStep->text().toFloat() < 300. && machineDialog->ui->y_lcdNumber->value() + machineDialog->ui->yHome->value() + machineDialog->ui->yStep->text().toFloat() < 400.)
     {
         if (machineDialog->ui->toolSafetyCheckBox->isChecked())
-            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR %d,%d;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),zTrack,0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR %ld,%ld;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),zTrack,0x0d,0x1a);
         else
-            sprintf(lastHpglCommand,"VS %2.1f;PR %d,%d;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;PR %ld,%ld;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),0x0d,0x1a);
     }
     else if (command == "MoveRightDown" && machineDialog->ui->x_lcdNumber->value() + machineDialog->ui->xHome->value() > machineDialog->ui->xStep->text().toFloat() && machineDialog->ui->y_lcdNumber->value() + machineDialog->ui->yHome->value() > machineDialog->ui->yStep->text().toFloat())
     {
@@ -351,36 +351,36 @@ bool CSPXRobbyController::sendRobbyHpglLineCommand(CSPXString command)
             sprintf(lastHpglCommand,"VS %2.1f;PR %d,-%d;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),0x0d,0x1a);
     }
     else if (command == "MoveZUp" && machineDialog->ui->z_lcdNumber->value() > -machineDialog->ui->zHome->value())
-        sprintf(lastHpglCommand,"@ZR -%d;OA;%c%c",std::lround(40.0*machineDialog->ui->zStep->text().toFloat()),0x0d,0x1a);
+        sprintf(lastHpglCommand,"@ZR -%ld;OA;%c%c",std::lround(40.0*machineDialog->ui->zStep->text().toFloat()),0x0d,0x1a);
     else if (command == "MoveZDown" && machineDialog->ui->z_lcdNumber->value() < 90-machineDialog->ui->zHome->value())
         sprintf(lastHpglCommand,"@ZR %d;OA;%c%c",std::lround(40.0*machineDialog->ui->zStep->text().toFloat()),0x0d,0x1a);
     else if (command == "MoveLeft" && machineDialog->ui->x_lcdNumber->value() + machineDialog->ui->xHome->value() >= machineDialog->ui->xStep->text().toFloat())
     {
         if (machineDialog->ui->toolSafetyCheckBox->isChecked())
-            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR -%d,0;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),zTrack,0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR -%ld,0;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),zTrack,0x0d,0x1a);
         else
-            sprintf(lastHpglCommand,"VS %2.1f;PR -%d,0;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->xStep->displayText().toFloat()),0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;PR -%ld,0;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->xStep->displayText().toFloat()),0x0d,0x1a);
     }
     else if (command == "MoveDown" && machineDialog->ui->y_lcdNumber->value() + machineDialog->ui->yHome->value() >= machineDialog->ui->yStep->text().toFloat())
     {
         if (machineDialog->ui->toolSafetyCheckBox->isChecked())
-            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR 0,-%d;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),zTrack,0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR 0,-%ld;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),zTrack,0x0d,0x1a);
         else
-            sprintf(lastHpglCommand,"VS %2.1f;PR 0,-%d;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->yStep->displayText().toFloat()),0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;PR 0,-%ld;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->yStep->displayText().toFloat()),0x0d,0x1a);
     }
     else if (command == "MoveRight" && machineDialog->ui->x_lcdNumber->value() + machineDialog->ui->xHome->value() + machineDialog->ui->xStep->text().toFloat() <= 300.0)
     {
         if (machineDialog->ui->toolSafetyCheckBox->isChecked())
-            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR %d,0;@ZR %d;OA;%c%c",zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),zTrack,0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR %ld,0;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),zTrack,0x0d,0x1a);
         else
-            sprintf(lastHpglCommand,"VS %2.1f;PR %d,0;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->xStep->displayText().toFloat()),0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;PR %ld,0;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->xStep->displayText().toFloat()),0x0d,0x1a);
     }
     else if (command == "MoveUp" && machineDialog->ui->y_lcdNumber->value() + machineDialog->ui->yHome->value() + machineDialog->ui->yStep->text().toFloat() <= 400.0)
     {
         if (machineDialog->ui->toolSafetyCheckBox->isChecked())
-            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR 0,%d;@ZR %dOA;%c%c;",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),zTrack,0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR 0,%ld;@ZR %dOA;%c%c;",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),zTrack,0x0d,0x1a);
         else
-            sprintf(lastHpglCommand,"VS %2.1f;PR 0,%d;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->yStep->displayText().toFloat()),0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;PR 0,%ld;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->yStep->displayText().toFloat()),0x0d,0x1a);
     }
 
     if (command == "NewXYZHomePosition")
@@ -659,41 +659,42 @@ void CSPXRobbyController::checkResponse(QString serialResponse)
         machineDialog->ui->statusMessage->setPlainText(QString("Serial Port Resonse : " + QString(machineDialog->GetController()->response)));
 
         float x,y,z;
-        char *pcoords = nullptr;
+        char *pZcoords = nullptr;
+        char *pXcoords, *pYcoords = nullptr;
         char *pmode = nullptr;
 
-        pcoords = strstr((char*)response,"X:");
-        if (pcoords)
+        pXcoords = strstr((char*)response,"X:");
+        if (pXcoords)
         {
-            sscanf(pcoords,"X: %f;Y: %f;Z: %f;",&x,&y,&z);
+            sscanf_s(pXcoords,"X: %f;Y: %f;Z: %f;",&x,&y,&z);
             machineDialog->ui->x_lcdNumber->display(x);
             machineDialog->ui->y_lcdNumber->display(y);
             machineDialog->ui->z_lcdNumber->display(z);
         }
-        pcoords =  strstr((char*)response,"Y:");
-        if (pcoords)
+        pYcoords =  strstr((char*)response,"Y:");
+        if (pYcoords)
         {
-            sscanf(pcoords,"Y: %f;Z: %f;",&y,&z);
+            sscanf_s(pYcoords,"Y: %f;Z: %f;",&y,&z);
             machineDialog->ui->y_lcdNumber->display(y);
             machineDialog->ui->z_lcdNumber->display(z);
         }
 
+        if (pXcoords && pYcoords) {
+            if (machineDialog->xSpindleLine)
+                machineDialog->scene->removeItem(machineDialog->xSpindleLine);
+            if (machineDialog->ySpindleLine)
+                machineDialog->scene->removeItem(machineDialog->ySpindleLine);
 
-        if (machineDialog->xSpindleLine)
-            machineDialog->scene->removeItem(machineDialog->xSpindleLine);
-        if (machineDialog->ySpindleLine)
-            machineDialog->scene->removeItem(machineDialog->ySpindleLine);
+            machineDialog->xSpindleLine = machineDialog->scene->addLine(std::lround(x/2.)-5, std::lround(200.-y/2.), std::lround(x/2.)+5, std::lround(200.-y/2.), whitePen);
+            machineDialog->xSpindleLine->setZValue(1);
+            machineDialog->ySpindleLine = machineDialog->scene->addLine(std::lround(x/2.), std::lround(200.-y/2.)-5, std::lround(x/2.), std::lround(200.-y/2.)+5, whitePen);
+            machineDialog->ySpindleLine->setZValue(1);
+        }
 
-        machineDialog->xSpindleLine = machineDialog->scene->addLine(std::lround(x/2.)-5, std::lround(200.-y/2.), std::lround(x/2.)+5, std::lround(200.-y/2.), whitePen);
-        machineDialog->xSpindleLine->setZValue(1);
-        machineDialog->ySpindleLine = machineDialog->scene->addLine(std::lround(x/2.), std::lround(200.-y/2.)-5, std::lround(x/2.), std::lround(200.-y/2.)+5, whitePen);
-        machineDialog->ySpindleLine->setZValue(1);
-
-
-        pcoords =  strstr((char*)response,"Z:");
-        if (pcoords)
+        pZcoords =  strstr((char*)response,"Z:");
+        if (pZcoords)
         {
-            sscanf(pcoords,"Z: %f;",&z);
+            sscanf_s(pZcoords,"Z: %f;",&z);
             machineDialog->ui->z_lcdNumber->display(z);
         }
 
@@ -701,7 +702,7 @@ void CSPXRobbyController::checkResponse(QString serialResponse)
         if (pmode)
         {
             char mod;
-            sscanf(pmode,"MD:%d;",&mod);
+            sscanf_s(pmode,"MD:%d;",&mod);
             SetMode(mod);
             switch (GetMode())
             {

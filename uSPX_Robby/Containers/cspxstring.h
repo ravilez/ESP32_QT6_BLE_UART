@@ -261,6 +261,9 @@ class CSPXString
         }
         else
             return (unsigned int )sl;
+
+
+        return 0;
     }
 
     public: size_t Size() const

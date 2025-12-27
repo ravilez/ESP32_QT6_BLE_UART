@@ -859,7 +859,7 @@ void CSPXMatrix::gaussj2()
                     {
                         Error((char*)"gaussj: Singular Matrix-1");
                         delete [] ipiv;
-                        delete [] indxc;
+                        //delete [] indxc;
                     }
                 }
             }
