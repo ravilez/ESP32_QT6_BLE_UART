@@ -9,6 +9,10 @@
 #include <QtSerialPort/QSerialPort>
 #include <QGraphicsLineItem>
 
+#ifndef _WIN32
+#define sscanf_s sscanf
+#endif
+
 //QSerialPort::readyRead signal is emitted once every time new data is available for reading from the device
 void SerialReceiverThread::run()
 {

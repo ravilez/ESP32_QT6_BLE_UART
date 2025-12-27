@@ -36,7 +36,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
     if (reply == QMessageBox::Yes) {
 
-        robbyController.disconnectComms();
+        robbyController.disconnectRS232Comms();
 
         event->accept();
     } else {

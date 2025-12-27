@@ -233,7 +233,7 @@ class CSPXString
         m_string[minl] = '\0';
     }
 
-    public:CSPXString& SubStr(unsigned int iidx, int fidx)
+    public:CSPXString SubStr(unsigned int iidx, int fidx)
     {
         CSPXString str(Length());
         if (fidx < 0)
