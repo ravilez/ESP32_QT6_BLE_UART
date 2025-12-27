@@ -50,6 +50,9 @@ public:
 
     CSPXRobbyController * GetController() { return &robbyController; }
 
+protected:
+    void closeEvent(QCloseEvent *event) override;
+
 public:
     QGraphicsScene *scene;
     void drawGrid(const QSize &size, int spacing);
@@ -142,9 +145,9 @@ public:
     QPixmap *red;
 
     QString fileName;
-    QByteArray *cncFile;
-    CSPXHpglCommands *hpglCommands;
-    QStandardItemModel *model;
+    QByteArray *cncFile = nullptr;
+    CSPXHpglCommands *hpglCommands = nullptr;
+    QStandardItemModel *model = nullptr;
 
     FileModeCheckThread *workerThread = nullptr;
 

@@ -25,6 +25,26 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::closeEvent(QCloseEvent *event) {
+
+    auto reply = QMessageBox::question(
+        this,
+        "Confirm Exit",
+        "Are you sure you want to exit?",
+        QMessageBox::Yes | QMessageBox::No
+    );
+
+    if (reply == QMessageBox::Yes) {
+
+        robbyController.disconnectComms();
+
+        event->accept();
+    } else {
+        event->ignore();
+    }
+}
+
+
 void MainWindow::Initialize()
 {
     robbyController.SetMachineDialog(this);

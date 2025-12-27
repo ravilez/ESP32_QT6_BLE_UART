@@ -80,14 +80,14 @@ public slots:
     private:
         static MainWindow *machineDialog;
 
-    CSPXCOMPort *coms;
+    CSPXCOMPort *coms = nullptr;
     QFile file;
     QTimer busyTimer;
 
     bool connected;
     char mode;
 
-    SerialReceiverThread *receiverThread;
+    SerialReceiverThread *receiverThread = nullptr;
 
     char lastHpglCommand[128];
 
