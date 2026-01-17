@@ -16,6 +16,12 @@
 #include "sdkconfig.h"
 #include "esp_log.h"
 
+#include "sdcard.h"
+
+bool HAVE_SD = true;
+uint8_t cardType = CARD_NONE;
+
+
 #define ECHO_TASK_STACK_SIZE 4096  // 4096 words (~16 KB on ESP32)
 
 constexpr int SCREEN_WIDTH = 128;
@@ -25,8 +31,6 @@ constexpr int SCREEN_ADDRESS = 0x3C;
 
 constexpr int OLED_SDA = 21;
 constexpr int OLED_SCL = 22;
-constexpr int TRIG_PIN = 26;
-constexpr int ECHO_PIN = 25;
 
 /* UART settings */
 constexpr uart_port_t UARTX = UART_NUM_2;
@@ -35,9 +39,7 @@ constexpr int TX_PIN  = 17;
 constexpr int RX_PIN  = 16;
 constexpr int RTS_PIN = 4;   // ESP32 RTS output to converter CTS (5th pin from bottom-right)
 constexpr int CTS_PIN = 2;   // ESP32 CTS input from converter RTS (4th pin from bottom-right)
-constexpr int BAUD    = 9600;
-
-
+constexpr int BAUD    = 38600;
 
 #define SERVICE_UUID "a05fde7e-bacb-40b9-9856-efb85cdb8f66"
 #define CHAR_TX_NF_UUID "eb99eb2b-048a-4fa7-a81f-4f62ca333f07"
@@ -54,6 +56,7 @@ Adafruit_SH1106G display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 float duration_us, distance_cm;
 
+void sendFSData(const char* data);
 
 class RxCallbacks : public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic* c) override {
@@ -74,9 +77,58 @@ class FSReadCallbacks : public BLECharacteristicCallbacks {
     // Data from BLE central -> sdcard
 
     String s = c->getValue();
+    s.trim();
     Serial.println("Received data: "+s);
+    Serial.println("HAVE_SD: "+ String(HAVE_SD));
+    Serial.println(strcmp(s.c_str(),"FF_CMD"));
 
     if (!s.isEmpty()) {
+      int separatorIndex = s.indexOf(':')
+      if (separatorIndex >= 0) {
+        if (!strncmp(s.c_str(),"FF_CMD",6)) {
+          String filename = s.substring(separatorIndex+1)
+          std::string filepath = findFile(SD, filename.c_str(), 0);
+          Serial.println(filepath.c_str());
+          pFSCharacteristic->setValue(filepath.c_str());
+          pFSCharacteristic->notify();
+        }
+        else if (!strncmp(s.c_str(),"EX_CMD",6)) {
+          String filename = s.substring(separatorIndex+1)
+          std::string filepath = findFile(SD, filename.c_str(), 0);
+          File file = fs.open(filepath);
+          static uint8_t buf[513];
+          size_t len = 0;
+          if(file){
+            len = file.size();
+            size_t flen = len;
+            while(len){
+              size_t toRead = len;
+              if(toRead > 512){
+                toRead = 512;
+              }
+              file.read(buf, toRead);
+              //
+              buf[512] = 0;
+              uint8_t *pBuf = &buf{0];
+              while(pBuf != 0) {
+                while(pBuf != '\n') {
+                  pBuf++;
+                }
+                
+              }
+
+              len -= toRead;
+            }
+            file.close();
+
+            pFSCharacteristic->setValue(filepath.c_str());
+            pFSCharacteristic->notify();
+          }
+        }
+        else  {
+          listDir(SD, "/", 0);
+        }
+      }
     }
   }
 };
@@ -125,10 +177,9 @@ static void echo_task(void *arg) {
 
         }
     }
-
 }
 
-void setup() {
+void setup(){
   Serial.begin(115200);
 
   Wire.begin(OLED_SDA,OLED_SCL);
@@ -185,34 +236,48 @@ void setup() {
 
   xTaskCreate(echo_task, "uart_task", ECHO_TASK_STACK_SIZE, NULL, 10, NULL);
 
+  if(!SD.begin(5)){
+    Serial.println("Card Mount Failed");
+    HAVE_SD = false;
+    return;
+  }
+
+  HAVE_SD = true;
+
+  cardType = SD.cardType();
+
+  if(cardType == CARD_NONE){
+    Serial.println("No SD card attached");
+    return;
+  }
+
+  Serial.print("SD Card Type: ");
+  if(cardType == CARD_MMC){
+    Serial.println("MMC");
+  } else if(cardType == CARD_SD){
+    Serial.println("SDSC");
+  } else if(cardType == CARD_SDHC){
+    Serial.println("SDHC");
+  } else {
+    Serial.println("UNKNOWN");
+  }
+
+  uint64_t cardSize = SD.cardSize() / (1024 * 1024);
+  Serial.printf("SD Card Size: %lluMB\n", cardSize);
+}
+
+void sendFSData(const char* data) {
+  pFSCharacteristic->setValue(data);
+  pFSCharacteristic->notify();
 }
 
 void loop() {
 
-  digitalWrite(TRIG_PIN, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIG_PIN, LOW);
-
-  duration_us = pulseIn(ECHO_PIN, HIGH);
-  distance_cm = 0.017 * duration_us;
-
-  Serial.print("Distance: ");
-  Serial.print(distance_cm);
-  Serial.println(" cm");
-
-  String distanceString = String(distance_cm);
-
-  pTXNFCharacteristic->setValue(distanceString.c_str());
-  pTXNFCharacteristic->notify();
-  pFSCharacteristic->setValue("Not SD-Card detected");
-  pFSCharacteristic->notify();
-
   display.setTextSize(2);
   display.setTextColor(SH110X_WHITE);
   display.setCursor(0,0);
-  display.print("Distance: ");
-  display.print(distance_cm);
-  display.println(" cm");
+  display.print("Position: ");
+  display.print("x 0.000, y 0.000, z 0.000");
   display.display();
 
   delay(100);
