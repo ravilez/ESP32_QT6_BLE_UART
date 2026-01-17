@@ -1,6 +1,7 @@
 #ifndef CSPXMATRIX_H
 #define CSPXMATRIX_H
 
+#include <initializer_list>
 
 class CSPXVector;
 
@@ -45,7 +46,7 @@ public:
     // from CSPXVector
     CSPXMatrix(const CSPXVector &rval);
     // CSPXMatrix A(3,v1,v2,v3);
-    CSPXMatrix(int colums, CSPXVector &v1, ...);
+    CSPXMatrix(std::initializer_list<CSPXVector> rows);
 
     ~CSPXMatrix();
 

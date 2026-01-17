@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.19)
 project(uSPX_Robby LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets SerialPort)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets SerialPort Bluetooth OpenGLWidgets OpenGL)
 
 qt_standard_project_setup()
 
@@ -16,12 +16,15 @@ qt_add_executable(uSPX_Robby
     mainwindow.h
     mainwindow.ui
 
+
     CNC/cspxgraphicsview.cpp CNC/cspxgraphicsview.h
     CNC/cspxtableview.cpp CNC/cspxtableview.h
     resource.qrc
     CNC/cspxcheckboxdelegate.cpp CNC/cspxcheckboxdelegate.h   CNC/cspxgraphicsview.cpp CNC/cspxgraphicsview.h CNC/cspxhpglcommands.cpp CNC/cspxhpglcommands.h CNC/cspxrobbycontroller.cpp CNC/cspxrobbycontroller.h CNC/cspxtableview.cpp CNC/cspxtableview.h Comms/cspxMessage.cpp Comms/cspxMessage.h Containers/cspxarray.h Containers/cspxlist.h Containers/cspxmatrix.cpp Containers/cspxmatrix.h Containers/cspxparray.h Containers/cspxstack.h Containers/cspxstring.cpp Containers/cspxstring.h Containers/cspxTMatrix.h Containers/cspxTVector.cpp Containers/cspxTVector.h Containers/cspxtypes.h Containers/cspxutility.cpp Containers/cspxutility.h Containers/cspxvector.cpp Containers/cspxvector.h
     Comms/cspxCommunication.cpp Comms/cspxcommunication.h
-
+    Comms/cspxblecontroller.cpp Comms/cspxblecontroller.h
+    Comms/cspxcomport.h Comms/cspxcomport.cpp
+    CNC/cspxopengldialog.cpp CNC/cspxopengldialog.h CNC/cspxopengldialog.ui CNC/cspxopenglwidget.cpp CNC/cspxopenglwidget.h
 )
 
 target_link_libraries(uSPX_Robby
@@ -29,5 +32,8 @@ target_link_libraries(uSPX_Robby
         Qt::Core
         Qt::Widgets
         Qt::SerialPort
+        Qt::Bluetooth
+        Qt::OpenGL
+        Qt::OpenGLWidgets
 )
 

@@ -2,12 +2,18 @@
 #include <QMessageBox>
 
 #include "cspxrobbycontroller.h"
+
 #include "../mainwindow.h"
 #include "../ui_mainwindow.h"
 #include "cspxhpglcommands.h"
+#include "../Comms/cspxcomport.h"
+#include "../Comms/cspxblecontroller.h"
+
 
 #include <QtSerialPort/QSerialPort>
 #include <QGraphicsLineItem>
+
+MainWindow *CSPXRobbyController::machineInterface = nullptr;
 
 //QSerialPort::readyRead signal is emitted once every time new data is available for reading from the device
 void SerialReceiverThread::run()
@@ -25,10 +31,10 @@ void SerialReceiverThread::run()
 
 void SerialReceiverThread::readData()
 {
-    MainWindow* machineDialog = CSPXRobbyController::GetMachineDialog();
-    CSPXRobbyController *ctrl = machineDialog->GetController();
+    MainWindow* machineUI = CSPXRobbyController::GetMainWindow();
+    CSPXRobbyController *ctrl = machineUI->GetController();
 
-    //machineDialog->ui->serialComboBox->currentText().toStdString().c_str();
+    //machineInterface->ui->serialComboBox->currentText().toStdString().c_str();
 
     CSPXMessage rec_msg;
     ctrl->GetComs()->ReceiveData(&rec_msg);
@@ -39,18 +45,16 @@ void SerialReceiverThread::readData()
 
 void CSPXRobbyController::readData()
 {
-    CSPXRobbyController *ctrl = machineDialog->GetController();
-
-    //machineDialog->ui->serialComboBox->currentText().toStdString().c_str();
+    //machineInterface->ui->serialComboBox->currentText().toStdString().c_str();
 
     CSPXMessage rec_msg;
-    ctrl->GetComs()->ReceiveData(&rec_msg);
+    GetComs()->ReceiveData(&rec_msg);
 
-    machineDialog->GetController()->response += rec_msg.GetData();
+    machineInterface->GetController()->response += rec_msg.GetData();
 
-    if (strstr((char*)machineDialog->GetController()->response,"\r"))
+    if (strstr((char*)machineInterface->GetController()->response,"\r"))
     {
-        machineDialog->ui->statusMessage->setPlainText(QString(machineDialog->GetController()->response));
+        machineInterface->ui->statusMessage->setPlainText(QString(machineInterface->GetController()->response));
 
         float x,y,z;
         char *pcoords = nullptr;
@@ -58,65 +62,65 @@ void CSPXRobbyController::readData()
 
         //if (lastHpglCommand[0] != 'O' && lastHpglCommand[1] != 'F')
         {
-            pcoords = strstr((char*)machineDialog->GetController()->response,"X:");
+            pcoords = strstr((char*)machineInterface->GetController()->response,"X:");
             if (pcoords)
             {
-                sscanf(pcoords,"X: %f;Y: %f;Z: %f;",&x,&y,&z);
-                machineDialog->ui->x_lcdNumber->display(x);
-                machineDialog->ui->y_lcdNumber->display(y);
-                machineDialog->ui->z_lcdNumber->display(z);
+                sscanf_s(pcoords,"X: %f;Y: %f;Z: %f;",&x,&y,&z);
+                machineInterface->ui->x_lcdNumber->display(x);
+                machineInterface->ui->y_lcdNumber->display(y);
+                machineInterface->ui->z_lcdNumber->display(z);
             }
-            pcoords =  strstr((char*)machineDialog->GetController()->response,"Y:");
+            pcoords =  strstr((char*)machineInterface->GetController()->response,"Y:");
             if (pcoords)
             {
-                sscanf(pcoords,"Y: %f;Z: %f;",&y,&z);
-                machineDialog->ui->y_lcdNumber->display(y);
-                machineDialog->ui->z_lcdNumber->display(z);
+                sscanf_s(pcoords,"Y: %f;Z: %f;",&y,&z);
+                machineInterface->ui->y_lcdNumber->display(y);
+                machineInterface->ui->z_lcdNumber->display(z);
             }
-            pcoords =  strstr((char*)machineDialog->GetController()->response,"Z:");
+            pcoords =  strstr((char*)machineInterface->GetController()->response,"Z:");
             if (pcoords)
             {
-                sscanf(pcoords,"Z: %f;",&z);
-                machineDialog->ui->z_lcdNumber->display(z);
+                sscanf_s(pcoords,"Z: %f;",&z);
+                machineInterface->ui->z_lcdNumber->display(z);
             }
         }
 
-        pmode =  strstr((char*)machineDialog->GetController()->response,"MD:");
+        pmode =  strstr((char*)machineInterface->GetController()->response,"MD:");
         if (pmode)
         {
-            char mod;
-            sscanf(pmode,"MD:%d;",&mod);
-            machineDialog->GetController()->SetMode(mod);
-            switch (machineDialog->GetController()->GetMode())
+            int mod;
+            if (sscanf_s(pmode,"MD:%d;",&mod) == 1)
+                SetMode(mod);
+            switch (machineInterface->GetController()->GetMode())
             {
                 case 0:
                 {
-                    machineDialog->ui->localMode->setChecked(true);
-                    machineDialog->ui->label_Busy_Status->setPixmap(*(machineDialog->green));
+                    machineInterface->ui->localMode->setChecked(true);
+                    machineInterface->ui->label_Busy_Status->setPixmap(*(machineInterface->green));
                 }
                 break;
                 case 1:
                 {
-                    machineDialog->ui->dccMode->setChecked(true);
+                    machineInterface->ui->dccMode->setChecked(true);
                     //dccModeCtrl->ChangeGroupCheck();
-                    machineDialog->ui->label_Busy_Status->setPixmap(*(machineDialog->green));
+                    machineInterface->ui->label_Busy_Status->setPixmap(*(machineInterface->green));
                 }
                 break;
                 case 2:
                 {
-                    machineDialog->ui->lineMode->setChecked(true);
-                    machineDialog->ui->label_Busy_Status->setPixmap(*(machineDialog->green));
+                    machineInterface->ui->lineMode->setChecked(true);
+                    machineInterface->ui->label_Busy_Status->setPixmap(*(machineInterface->green));
                 }
                 break;
                 case 3:
                 {
-                    machineDialog->ui->fileMode->setChecked(true);
-                    machineDialog->ui->label_Busy_Status->setPixmap(*(machineDialog->green));
+                    machineInterface->ui->fileMode->setChecked(true);
+                    machineInterface->ui->label_Busy_Status->setPixmap(*(machineInterface->green));
                 }
                 break;
                 case 4: //busy
                 {
-                    machineDialog->ui->label_Busy_Status->setPixmap(*(machineDialog->red));
+                    machineInterface->ui->label_Busy_Status->setPixmap(*(machineInterface->red));
                 }
             }
         }
@@ -126,9 +130,10 @@ void CSPXRobbyController::readData()
         {
             //MD: recheck the new current profiler mode
             const char fmdata[] = { 0x1b, 'M', 'D', ':', 0x0d, 0x1a};
-            machineDialog->GetController()->GetComs()->write(fmdata,6);
+            ((CSPXCOMPort*)GetComs())->write(fmdata,6);
 
-            machineDialog->GetController()->GetComs()->waitForBytesWritten(30000);
+            if (machineInterface->ui->radioSerialButton->isChecked())
+                ((CSPXCOMPort*)GetComs())->waitForBytesWritten(300);
         }
 
         pmode = strstr((char*)rec_msg.GetData(),"UC:");
@@ -139,21 +144,21 @@ void CSPXRobbyController::readData()
             SendData(msg);
         }
 
-        machineDialog->GetController()->response = "";
+        machineInterface->GetController()->response = "";
     }
 
-    //emit changeSpindleCoordinates(machineDialog->ui->xHome->value()+machineDialog->ui->x_lcdNumber->value(), machineDialog->ui->yHome->value() + machineDialog->ui->y_lcdNumber->value(), machineDialog->ui->zHome->value()+machineDialog->ui->z_lcdNumber->value());
+    emit changeSpindleCoordinates(machineInterface->ui->xHome->value()+machineInterface->ui->x_lcdNumber->value(), machineInterface->ui->yHome->value() + machineInterface->ui->y_lcdNumber->value(), machineInterface->ui->zHome->value()+machineInterface->ui->z_lcdNumber->value());
 }
 
 void CSPXRobbyController::handleError(QSerialPort::SerialPortError error)
 {
-    if (error == QSerialPort::ResourceError) {
-        MainWindow* dlg = CSPXRobbyController::GetMachineDialog();
-        dlg->ui->statusMessage->setPlainText(QString("Serial Port error : " + QString::number(error)));
+    if (machineInterface->ui->radioSerialButton->isChecked()) {
+        if (error == QSerialPort::ResourceError) {
+            MainWindow* dlg = CSPXRobbyController::GetMainWindow();
+            dlg->ui->statusMessage->setPlainText(QString("Serial Port error : " + QString::number(error)));
+        }
     }
 }
-
-MainWindow * CSPXRobbyController::machineDialog = nullptr;
 
 CSPXRobbyController::CSPXRobbyController(QObject* parent) : QObject(parent)
   ,connected(false)
@@ -163,7 +168,6 @@ CSPXRobbyController::CSPXRobbyController(QObject* parent) : QObject(parent)
     whitePen.setWidth(1);
     whitePen.setStyle(Qt::SolidLine);
     whitePen.setCosmetic(true);
-
 }
 
 CSPXRobbyController::~CSPXRobbyController()
@@ -172,53 +176,53 @@ CSPXRobbyController::~CSPXRobbyController()
         receiverThread->terminate();
 }
 
-//the generic RS232Comms
-//this is a slot when connect to robby controller is triggered from the dialog
-bool CSPXRobbyController::connectRS232Comms()
+bool CSPXRobbyController::connectComms()
 {
-
-    //default values for now
-    MainWindow* dlg = CSPXRobbyController::GetMachineDialog();
-
-    QString port = machineDialog->ui->serialComboBox->currentText();
-    if (port.isEmpty())
-        return false;
-
-    //create device
-    coms = new CSPXCOMPort(port.toStdString().c_str());
-
-    receiverThread = new SerialReceiverThread();
-    receiverThread->controller = this;
-    connect(receiverThread, &SerialReceiverThread::haveResponse, this, &CSPXRobbyController::checkResponse);
-
-    connect(coms, &QSerialPort::errorOccurred, this, &CSPXRobbyController::handleError);
-    //connect(coms, &QSerialPort::readyRead, this, &CSPXRobbyController::readData);
-    connect(coms,  &QSerialPort::readyRead, receiverThread, &SerialReceiverThread::readData);
-    connect(this,  &CSPXRobbyController::resetMachine, this, &CSPXRobbyController::abortProcess);
-
-    coms->SetPortId(port.toStdString().c_str());
-    coms->SetBaudRate(38400);
-    coms->SetParity(0); //no parity
-    coms->SetStopbits(1);
-    coms->SetCharacters(8);
-    coms->SetFlowControl(2); //0:No flow control, 1, software, 2=hardware (RTS-CTS)
-
-    if (!coms->open(QIODevice::ReadWrite))
+    //create communiation channel
+    if (machineInterface->ui->radioSerialButton->isChecked())
     {
-        machineDialog->ui->statusMessage->setPlainText(QString("Serial Port error : Not Connected"));
-        return connected = false;
+        QString port = machineInterface->ui->serialComboBox->currentText();
+        if (port.isEmpty())
+            return false;
+
+        coms = new CSPXCOMPort();
+
+        if (coms->Open(port.toStdString().c_str())) {
+
+            receiverThread = new SerialReceiverThread();
+            receiverThread->controller = this;
+            connect(receiverThread, &SerialReceiverThread::haveResponse, this, &CSPXRobbyController::checkResponse);
+
+            connect((CSPXCOMPort*)coms, &QSerialPort::errorOccurred, this, &CSPXRobbyController::handleError);
+            connect((CSPXCOMPort*)coms,  &QSerialPort::readyRead, receiverThread, &SerialReceiverThread::readData);
+            connect(this,  &CSPXRobbyController::resetMachine, this, &CSPXRobbyController::abortProcess);
+        } else {
+            machineInterface->ui->statusMessage->setPlainText(QString("Serial Port error : Not Connected"));
+            return connected = false;
+        }
+
+        connected = true;
+
+        receiverThread->start();
+
+        //start timer to check busy (CTS flag) every 500ms
+        connect(&busyTimer,&QTimer::timeout,this,&CSPXRobbyController::checkBusyState);
+        busyTimer.setSingleShot(true);
+        busyTimer.setInterval(500);
+        busyTimer.start();
     }
-    coms->setDataTerminalReady(true);
+    else {
 
-    connected = true;
+        QString BLE_target = machineInterface->ui->targetBLE->displayText();
+        if (BLE_target.isEmpty())
+            return false;
 
-    receiverThread->start();
+        coms = new CSPXBLEController();
+        if (coms->Open(BLE_target.toStdString().c_str())) {
+            connect((CSPXBLEController*)coms, &CSPXBLEController::haveResponse, this, &CSPXRobbyController::checkResponse);
+        }
+    }
 
-    //start timer to check busy (CTS flag) every 500ms
-    connect(&busyTimer,&QTimer::timeout,this,&CSPXRobbyController::checkBusyState);
-    busyTimer.setSingleShot(true);
-    busyTimer.setInterval(500);
-    busyTimer.start();
 
     //query mode
     const char mdq_data[] = { 0x1b, 'M', 'D', ':', 0x0d, 0x1a };
@@ -229,10 +233,10 @@ bool CSPXRobbyController::connectRS232Comms()
     SendData(msg);
 
     //change to local mode
-    machineDialog->ui->localMode->clicked(true);
+    emit machineInterface->ui->localMode->clicked(true);
     if (GetMode()==0)
         //change to line mode
-        machineDialog->ui->lineMode->clicked(true);
+        emit machineInterface->ui->lineMode->clicked(true);
 
     if (GetMode()==2)
     {
@@ -245,27 +249,29 @@ bool CSPXRobbyController::connectRS232Comms()
 
 void CSPXRobbyController::checkBusyState()
 {
-    MainWindow* dlg = CSPXRobbyController::GetMachineDialog();
-
-    bool CTS_Status = GetComs()->pinoutSignals() & QSerialPort::ClearToSendSignal;
-    if (CTS_Status)
-        dlg->ui->label_CTS_Status->setPixmap(*(dlg->green));
-    else
-        dlg->ui->label_CTS_Status->setPixmap(*(dlg->red));
+    if (machineInterface->ui->radioSerialButton->isChecked()) {
+        bool CTS_Status = ((CSPXCOMPort*)GetComs())->pinoutSignals() & QSerialPort::ClearToSendSignal;
+        if (CTS_Status)
+            machineInterface->ui->label_CTS_Status->setPixmap(*(machineInterface->green));
+        else
+            machineInterface->ui->label_CTS_Status->setPixmap(*(machineInterface->red));
+    }
 
     busyTimer.start();
 
 }
 
-void CSPXRobbyController::disconnectRS232Comms()
+void CSPXRobbyController::disconnectComms()
 {
-    busyTimer.stop();
+    if (connected) {
+        busyTimer.stop();
 
-    coms->close();
-    MainWindow* dlg = CSPXRobbyController::GetMachineDialog();
-    dlg->Initialize();
+        coms->Close();
+        MainWindow* dlg = CSPXRobbyController::GetMainWindow();
+        dlg->Initialize();
 
-    connected = false;
+        connected = false;
+    }
 }
 
 
@@ -273,19 +279,19 @@ bool CSPXRobbyController::sendRobbyHpglLineCommand(CSPXString command)
 {
     memset(lastHpglCommand,0,128);
 
-    MainWindow* dlg = CSPXRobbyController::GetMachineDialog();
+    MainWindow* dlg = CSPXRobbyController::GetMainWindow();
 
-    double freeTravelSpeed = machineDialog->ui->travelSpeedSpinBox->value();
+    double freeTravelSpeed = machineInterface->ui->travelSpeedSpinBox->value();
 
     if (dlg->GetController()->GetMode() != 2)
     {
-        machineDialog->ui->statusMessage->setPlainText(QString("Not in Hpgl Line Mode !"));
+        machineInterface->ui->statusMessage->setPlainText(QString("Not in Hpgl Line Mode !"));
         return false;
     }
 
-    int z = std::lround(40.0*machineDialog->ui->z_lcdNumber->value());
-    int zHome = std::lround(40.0*machineDialog->ui->zHome->value());
-    int zTrack = std::lround(40.0*machineDialog->ui->zSafetyStep->text().toFloat());
+    int z = std::lround(40.0*machineInterface->ui->z_lcdNumber->value());
+    int zHome = std::lround(40.0*machineInterface->ui->zHome->value());
+    int zTrack = std::lround(40.0*machineInterface->ui->zSafetyStep->text().toFloat());
 
     if (zTrack > zHome + z)
         zTrack = zHome + z;
@@ -296,7 +302,7 @@ bool CSPXRobbyController::sendRobbyHpglLineCommand(CSPXString command)
 
     if (command == "Reset")
     {
-        disconnect(coms, &QSerialPort::readyRead, this, &CSPXRobbyController::readData);
+        disconnect(((CSPXCOMPort*)coms), &QSerialPort::readyRead, this, &CSPXRobbyController::readData);
         sprintf(lastHpglCommand,"@XX;%c%c",0x0d,0x1a);
     }
     else if (command == "Get Coordinates")
@@ -305,138 +311,138 @@ bool CSPXRobbyController::sendRobbyHpglLineCommand(CSPXString command)
     }
     else if (command == "MoveXY")
     {
-        if (machineDialog->ui->toolSafetyCheckBox->isChecked())
-            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PA %d,%d;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->xSpindlePos),std::lround(40.0*machineDialog->ySpindlePos),zTrack,0x0d,0x1a);
+        if (machineInterface->ui->toolSafetyCheckBox->isChecked())
+            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PA %ld,%ld;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineInterface->xSpindlePos),std::lround(40.0*machineInterface->ySpindlePos),zTrack,0x0d,0x1a);
         else
-            sprintf(lastHpglCommand,"VS %2.1f;PA %d,%d;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->xSpindlePos),std::lround(40.0*machineDialog->ySpindlePos),0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;PA %ld,%ld;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineInterface->xSpindlePos),std::lround(40.0*machineInterface->ySpindlePos),0x0d,0x1a);
     }
     else if (command == "MoveXYZHome")
     {
         sprintf(lastHpglCommand,"@HM;OA;%c%c",0x0d,0x1a);
-        machineDialog->ui->xHome->display(0.000);
-        machineDialog->ui->yHome->display(0.000);
-        machineDialog->ui->zHome->display(0.000);
+        machineInterface->ui->xHome->display(0.000);
+        machineInterface->ui->yHome->display(0.000);
+        machineInterface->ui->zHome->display(0.000);
     }
     else if (command == "MoveZHome")
     {
         sprintf(lastHpglCommand,"@HZ;OA;%c%c",0x0d,0x1a);
-        machineDialog->ui->zHome->display(0.000);
+        machineInterface->ui->zHome->display(0.000);
     }
-    else if (command == "MoveLeftUp" && machineDialog->ui->x_lcdNumber->value() + machineDialog->ui->xHome->value() > machineDialog->ui->xStep->text().toFloat() && machineDialog->ui->y_lcdNumber->value() + machineDialog->ui->yHome->value() < 400.0 - machineDialog->ui->yStep->text().toFloat())
+    else if (command == "MoveLeftUp" && machineInterface->ui->x_lcdNumber->value() + machineInterface->ui->xHome->value() > machineInterface->ui->xStep->text().toFloat() && machineInterface->ui->y_lcdNumber->value() + machineInterface->ui->yHome->value() < 400.0 - machineInterface->ui->yStep->text().toFloat())
     {
-        if (machineDialog->ui->toolSafetyCheckBox->isChecked())
-            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR -%d,%d;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),zTrack,0x0d,0x1a);
+        if (machineInterface->ui->toolSafetyCheckBox->isChecked())
+            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR -%ld,%ld;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineInterface->ui->xStep->text().toFloat()),std::lround(40.0*machineInterface->ui->yStep->text().toFloat()),zTrack,0x0d,0x1a);
         else
-            sprintf(lastHpglCommand,"VS %2.1f;PR -%d,%d;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;PR -%ld,%ld;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineInterface->ui->xStep->text().toFloat()),std::lround(40.0*machineInterface->ui->yStep->text().toFloat()),0x0d,0x1a);
     }
-    else if (command == "MoveLeftDown" && machineDialog->ui->x_lcdNumber->value() + machineDialog->ui->xHome->value() > machineDialog->ui->xStep->text().toFloat() && machineDialog->ui->y_lcdNumber->value() + machineDialog->ui->yHome->value() > machineDialog->ui->yStep->text().toFloat())
+    else if (command == "MoveLeftDown" && machineInterface->ui->x_lcdNumber->value() + machineInterface->ui->xHome->value() > machineInterface->ui->xStep->text().toFloat() && machineInterface->ui->y_lcdNumber->value() + machineInterface->ui->yHome->value() > machineInterface->ui->yStep->text().toFloat())
     {
-        if (machineDialog->ui->toolSafetyCheckBox->isChecked())
-            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR -%d,-%d;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),zTrack,0x0d,0x1a);
+        if (machineInterface->ui->toolSafetyCheckBox->isChecked())
+            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR -%ld,-%ld;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineInterface->ui->xStep->text().toFloat()),std::lround(40.0*machineInterface->ui->yStep->text().toFloat()),zTrack,0x0d,0x1a);
         else
-            sprintf(lastHpglCommand,"VS %2.1f;PR -%d,-%d;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;PR -%ld,-%ld;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineInterface->ui->xStep->text().toFloat()),std::lround(40.0*machineInterface->ui->yStep->text().toFloat()),0x0d,0x1a);
     }
-    else if (command == "MoveRightUp" && machineDialog->ui->x_lcdNumber->value() + machineDialog->ui->xHome->value() + machineDialog->ui->xStep->text().toFloat() < 300. && machineDialog->ui->y_lcdNumber->value() + machineDialog->ui->yHome->value() + machineDialog->ui->yStep->text().toFloat() < 400.)
+    else if (command == "MoveRightUp" && machineInterface->ui->x_lcdNumber->value() + machineInterface->ui->xHome->value() + machineInterface->ui->xStep->text().toFloat() < 300. && machineInterface->ui->y_lcdNumber->value() + machineInterface->ui->yHome->value() + machineInterface->ui->yStep->text().toFloat() < 400.)
     {
-        if (machineDialog->ui->toolSafetyCheckBox->isChecked())
-            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR %d,%d;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),zTrack,0x0d,0x1a);
+        if (machineInterface->ui->toolSafetyCheckBox->isChecked())
+            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR %ld,%ld;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineInterface->ui->xStep->text().toFloat()),std::lround(40.0*machineInterface->ui->yStep->text().toFloat()),zTrack,0x0d,0x1a);
         else
-            sprintf(lastHpglCommand,"VS %2.1f;PR %d,%d;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;PR %ld,%ld;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineInterface->ui->xStep->text().toFloat()),std::lround(40.0*machineInterface->ui->yStep->text().toFloat()),0x0d,0x1a);
     }
-    else if (command == "MoveRightDown" && machineDialog->ui->x_lcdNumber->value() + machineDialog->ui->xHome->value() > machineDialog->ui->xStep->text().toFloat() && machineDialog->ui->y_lcdNumber->value() + machineDialog->ui->yHome->value() > machineDialog->ui->yStep->text().toFloat())
+    else if (command == "MoveRightDown" && machineInterface->ui->x_lcdNumber->value() + machineInterface->ui->xHome->value() > machineInterface->ui->xStep->text().toFloat() && machineInterface->ui->y_lcdNumber->value() + machineInterface->ui->yHome->value() > machineInterface->ui->yStep->text().toFloat())
     {
-        if (machineDialog->ui->toolSafetyCheckBox->isChecked())
-            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR %d,-%d;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),zTrack,0x0d,0x1a);
+        if (machineInterface->ui->toolSafetyCheckBox->isChecked())
+            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR %ld,-%ld;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineInterface->ui->xStep->text().toFloat()),std::lround(40.0*machineInterface->ui->yStep->text().toFloat()),zTrack,0x0d,0x1a);
         else
-            sprintf(lastHpglCommand,"VS %2.1f;PR %d,-%d;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),std::lround(40.0*machineDialog->ui->yStep->text().toFloat()),0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;PR %ld,-%ld;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineInterface->ui->xStep->text().toFloat()),std::lround(40.0*machineInterface->ui->yStep->text().toFloat()),0x0d,0x1a);
     }
-    else if (command == "MoveZUp" && machineDialog->ui->z_lcdNumber->value() > -machineDialog->ui->zHome->value())
-        sprintf(lastHpglCommand,"@ZR -%d;OA;%c%c",std::lround(40.0*machineDialog->ui->zStep->text().toFloat()),0x0d,0x1a);
-    else if (command == "MoveZDown" && machineDialog->ui->z_lcdNumber->value() < 90-machineDialog->ui->zHome->value())
-        sprintf(lastHpglCommand,"@ZR %d;OA;%c%c",std::lround(40.0*machineDialog->ui->zStep->text().toFloat()),0x0d,0x1a);
-    else if (command == "MoveLeft" && machineDialog->ui->x_lcdNumber->value() + machineDialog->ui->xHome->value() >= machineDialog->ui->xStep->text().toFloat())
+    else if (command == "MoveZUp" && machineInterface->ui->z_lcdNumber->value() > -machineInterface->ui->zHome->value())
+        sprintf(lastHpglCommand,"@ZR -%ld;OA;%c%c",std::lround(40.0*machineInterface->ui->zStep->text().toFloat()),0x0d,0x1a);
+    else if (command == "MoveZDown" && machineInterface->ui->z_lcdNumber->value() < 90-machineInterface->ui->zHome->value())
+        sprintf(lastHpglCommand,"@ZR %ld;OA;%c%c",std::lround(40.0*machineInterface->ui->zStep->text().toFloat()),0x0d,0x1a);
+    else if (command == "MoveLeft" && machineInterface->ui->x_lcdNumber->value() + machineInterface->ui->xHome->value() >= machineInterface->ui->xStep->text().toFloat())
     {
-        if (machineDialog->ui->toolSafetyCheckBox->isChecked())
-            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR -%d,0;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),zTrack,0x0d,0x1a);
+        if (machineInterface->ui->toolSafetyCheckBox->isChecked())
+            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR -%ld,0;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineInterface->ui->xStep->text().toFloat()),zTrack,0x0d,0x1a);
         else
-            sprintf(lastHpglCommand,"VS %2.1f;PR -%d,0;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->xStep->displayText().toFloat()),0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;PR -%ld,0;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineInterface->ui->xStep->displayText().toFloat()),0x0d,0x1a);
     }
-    else if (command == "MoveDown" && machineDialog->ui->y_lcdNumber->value() + machineDialog->ui->yHome->value() >= machineDialog->ui->yStep->text().toFloat())
+    else if (command == "MoveDown" && machineInterface->ui->y_lcdNumber->value() + machineInterface->ui->yHome->value() >= machineInterface->ui->yStep->text().toFloat())
     {
-        if (machineDialog->ui->toolSafetyCheckBox->isChecked())
-            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR 0,-%d;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),zTrack,0x0d,0x1a);
+        if (machineInterface->ui->toolSafetyCheckBox->isChecked())
+            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR 0,-%ld;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineInterface->ui->xStep->text().toFloat()),zTrack,0x0d,0x1a);
         else
-            sprintf(lastHpglCommand,"VS %2.1f;PR 0,-%d;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->yStep->displayText().toFloat()),0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;PR 0,-%ld;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineInterface->ui->yStep->displayText().toFloat()),0x0d,0x1a);
     }
-    else if (command == "MoveRight" && machineDialog->ui->x_lcdNumber->value() + machineDialog->ui->xHome->value() + machineDialog->ui->xStep->text().toFloat() <= 300.0)
+    else if (command == "MoveRight" && machineInterface->ui->x_lcdNumber->value() + machineInterface->ui->xHome->value() + machineInterface->ui->xStep->text().toFloat() <= 300.0)
     {
-        if (machineDialog->ui->toolSafetyCheckBox->isChecked())
-            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR %d,0;@ZR %d;OA;%c%c",zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),zTrack,0x0d,0x1a);
+        if (machineInterface->ui->toolSafetyCheckBox->isChecked())
+            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR %ld,0;@ZR %d;OA;%c%c",freeTravelSpeed,zTrack,std::lround(40.0*machineInterface->ui->xStep->text().toFloat()),zTrack,0x0d,0x1a);
         else
-            sprintf(lastHpglCommand,"VS %2.1f;PR %d,0;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->xStep->displayText().toFloat()),0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;PR %ld,0;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineInterface->ui->xStep->displayText().toFloat()),0x0d,0x1a);
     }
-    else if (command == "MoveUp" && machineDialog->ui->y_lcdNumber->value() + machineDialog->ui->yHome->value() + machineDialog->ui->yStep->text().toFloat() <= 400.0)
+    else if (command == "MoveUp" && machineInterface->ui->y_lcdNumber->value() + machineInterface->ui->yHome->value() + machineInterface->ui->yStep->text().toFloat() <= 400.0)
     {
-        if (machineDialog->ui->toolSafetyCheckBox->isChecked())
-            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR 0,%d;@ZR %dOA;%c%c;",freeTravelSpeed,zTrack,std::lround(40.0*machineDialog->ui->xStep->text().toFloat()),zTrack,0x0d,0x1a);
+        if (machineInterface->ui->toolSafetyCheckBox->isChecked())
+            sprintf(lastHpglCommand,"VS %2.1f;@ZR -%d;PR 0,%ld;@ZR %dOA;%c%c;",freeTravelSpeed,zTrack,std::lround(40.0*machineInterface->ui->xStep->text().toFloat()),zTrack,0x0d,0x1a);
         else
-            sprintf(lastHpglCommand,"VS %2.1f;PR 0,%d;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineDialog->ui->yStep->displayText().toFloat()),0x0d,0x1a);
+            sprintf(lastHpglCommand,"VS %2.1f;PR 0,%ld;OA;%c%c",freeTravelSpeed,std::lround(40.0*machineInterface->ui->yStep->displayText().toFloat()),0x0d,0x1a);
     }
 
     if (command == "NewXYZHomePosition")
     {
-        double dx = machineDialog->ui->x_lcdNumber->value();
-        double dy = machineDialog->ui->y_lcdNumber->value();
-        double dz = machineDialog->ui->z_lcdNumber->value();
+        double dx = machineInterface->ui->x_lcdNumber->value();
+        double dy = machineInterface->ui->y_lcdNumber->value();
+        double dz = machineInterface->ui->z_lcdNumber->value();
 
-        double hdx = machineDialog->ui->xHome->value();
-        double hdy = machineDialog->ui->yHome->value();
-        double hdz = machineDialog->ui->zHome->value();
+        double hdx = machineInterface->ui->xHome->value();
+        double hdy = machineInterface->ui->yHome->value();
+        double hdz = machineInterface->ui->zHome->value();
 
-        machineDialog->ui->xHome->display(dx+hdx);
-        machineDialog->ui->yHome->display(dy+hdy);
-        machineDialog->ui->zHome->display(dz+hdz);
+        machineInterface->ui->xHome->display(dx+hdx);
+        machineInterface->ui->yHome->display(dy+hdy);
+        machineInterface->ui->zHome->display(dz+hdz);
 
-        machineDialog->ui->x_lcdNumber->display(0.000);
-        machineDialog->ui->y_lcdNumber->display(0.000);
-        machineDialog->ui->z_lcdNumber->display(0.000);
+        machineInterface->ui->x_lcdNumber->display(0.000);
+        machineInterface->ui->y_lcdNumber->display(0.000);
+        machineInterface->ui->z_lcdNumber->display(0.000);
 
         sprintf(lastHpglCommand,"@NH;%c%c",0x0d,0x1a);
 
-        if (machineDialog->wait_NewHomePosition)
+        if (machineInterface->wait_NewHomePosition)
             emit finished_NewHomePosition();
     }
     else if (command == "NewXYHomePosition")
     {
-        double dx = machineDialog->ui->x_lcdNumber->value();
-        double dy = machineDialog->ui->y_lcdNumber->value();
+        double dx = machineInterface->ui->x_lcdNumber->value();
+        double dy = machineInterface->ui->y_lcdNumber->value();
 
-        double hdx = machineDialog->ui->xHome->value();
-        double hdy = machineDialog->ui->yHome->value();
+        double hdx = machineInterface->ui->xHome->value();
+        double hdy = machineInterface->ui->yHome->value();
 
-        machineDialog->ui->xHome->display(dx+hdx);
-        machineDialog->ui->yHome->display(dy+hdy);
+        machineInterface->ui->xHome->display(dx+hdx);
+        machineInterface->ui->yHome->display(dy+hdy);
 
-        machineDialog->ui->x_lcdNumber->display(0.000);
-        machineDialog->ui->y_lcdNumber->display(0.000);
+        machineInterface->ui->x_lcdNumber->display(0.000);
+        machineInterface->ui->y_lcdNumber->display(0.000);
 
         sprintf(lastHpglCommand,"@NO;%c%c",0x0d,0x1a);
 
-        if (machineDialog->wait_NewHomePosition)
+        if (machineInterface->wait_NewHomePosition)
             emit finished_NewHomePosition();
     }
     else if (command == "NewZHomePosition")
     {
-        double dz = machineDialog->ui->z_lcdNumber->value();
-        double hdz = machineDialog->ui->zHome->value();
+        double dz = machineInterface->ui->z_lcdNumber->value();
+        double hdz = machineInterface->ui->zHome->value();
 
-        machineDialog->ui->zHome->display(dz+hdz);
+        machineInterface->ui->zHome->display(dz+hdz);
 
-        machineDialog->ui->z_lcdNumber->display(0.000);
+        machineInterface->ui->z_lcdNumber->display(0.000);
 
         sprintf(lastHpglCommand,"@NZ;%c%c",0x0d,0x1a);
 
-        if (machineDialog->wait_NewHomePosition)
+        if (machineInterface->wait_NewHomePosition)
             emit finished_NewHomePosition();
     }
 
@@ -449,14 +455,13 @@ bool CSPXRobbyController::sendRobbyHpglLineCommand(CSPXString command)
     }
     else
     {
-        MainWindow* dlg = CSPXRobbyController::GetMachineDialog();
-        dlg->ui->statusMessage->setPlainText(command + ": " + errorMsg);
+        machineInterface->ui->statusMessage->setPlainText(command + ": " + errorMsg);
 
     }
 
 
     if (command == "Reset")
-        machineDialog->GetController()->disconnectRS232Comms();
+        machineInterface->GetController()->disconnectComms();
 
     return true;
 }
@@ -514,7 +519,7 @@ void CSPXRobbyController::SetHpglLineMode()
     }
     else
     {
-        machineDialog->ui->statusMessage->setPlainText(QString("Only via Local Mode 0"));
+        machineInterface->ui->statusMessage->setPlainText(QString("Only via Local Mode 0"));
     }
 
     const char mdq_data[] = { 0x1b, 'M', 'D', ':', 0x0d,0x1a};
@@ -537,7 +542,7 @@ void CSPXRobbyController::SetHpglFileMode()
     }
     else
     {
-        machineDialog->ui->statusMessage->setPlainText(QString("Only via Local Mode 0"));
+        machineInterface->ui->statusMessage->setPlainText(QString("Only via Local Mode 0"));
     }
 
 }
@@ -564,18 +569,18 @@ void CSPXRobbyController::SetDCCMode()
 
 bool CSPXRobbyController::sendRobbyFile(int fileIndex)
 {
-    CSPXHpglCommands *commands = machineDialog->hpglCommands;
+    CSPXHpglCommands *commands = machineInterface->hpglCommands;
 
-    int xhome = std::lround(machineDialog->ui->xHome->value()*40.);
-    int yhome = std::lround(machineDialog->ui->yHome->value()*40.);
-    int zhome = std::lround(machineDialog->ui->zHome->value()*40.);
+    int xhome = std::lround(machineInterface->ui->xHome->value()*40.);
+    int yhome = std::lround(machineInterface->ui->yHome->value()*40.);
+    int zhome = std::lround(machineInterface->ui->zHome->value()*40.);
 
     //validate negative values
     if (commands->x_min+xhome < 0 || commands->y_min+yhome < 0 /*|| commands->z_min+zhome < 0*/)
     {
-        machineDialog->ui->statusMessage->setPlainText(QString("workpiece is still out-of-bounds with respect to current (x,y) home position"
+        machineInterface->ui->statusMessage->setPlainText(QString("workpiece is still out-of-bounds with respect to current (x,y) home position"
                                                                "Set new home position and move workpice to it."));
-        machineDialog->abort = true;
+        machineInterface->abort = true;
         resetMachine();
         return false;
     }
@@ -589,10 +594,11 @@ bool CSPXRobbyController::sendRobbyFile(int fileIndex)
         file->append(0x3A); //:
         file->append(0x1A); //<SUB>
         file->append(0x0D); //<CR>
-        if (coms->pinoutSignals() & QSerialPort::ClearToSendSignal)
-            coms->SendData(file->data(),file->size());
+        if (((CSPXCOMPort*)coms)->pinoutSignals() & QSerialPort::ClearToSendSignal)
+            ((CSPXCOMPort*)coms)->SendData(file->data(),file->size());
 
-        coms->waitForReadyRead(30000);
+        if (machineInterface->ui->radioSerialButton->isChecked())
+            ((CSPXCOMPort*)coms)->waitForReadyRead(300);
     }
 
     return true;
@@ -638,113 +644,116 @@ bool CSPXRobbyController::sendRobbyModeCommand()
 
 void CSPXRobbyController::abortProcess()
 {
-    MainWindow* machineDialog = CSPXRobbyController::GetMachineDialog();
-    machineDialog->ui->sendFileButton->setEnabled(true);
+    machineInterface->ui->sendFileButton->setEnabled(true);
 
-    if (machineDialog->workerThread) {
-        if (machineDialog->workerThread->isRunning())
-            machineDialog->workerThread->terminate();
+    if (machineInterface->workerThread) {
+        if (machineInterface->workerThread->isRunning())
+            machineInterface->workerThread->terminate();
     }
 }
 
 void CSPXRobbyController::checkResponse(QString serialResponse)
 {
-    MainWindow* machineDialog = CSPXRobbyController::GetMachineDialog();
-
     response += serialResponse.toStdString().c_str();
-    machineDialog->ui->statusMessage->setPlainText(serialResponse);
+    machineInterface->ui->statusMessage->setPlainText(serialResponse);
 
     if (strstr((char*)response,"\r"))
     {
-        machineDialog->ui->statusMessage->setPlainText(QString("Serial Port Resonse : " + QString(machineDialog->GetController()->response)));
+        machineInterface->ui->statusMessage->setPlainText(QString("Serial Port Resonse : " + QString(machineInterface->GetController()->response)));
 
-        float x,y,z;
-        char *pcoords = nullptr;
+        float x = 0., y = 0., z = 0.;
+        char *pZcoords = nullptr;
+        char *pXcoords = nullptr, *pYcoords = nullptr;
         char *pmode = nullptr;
 
-        pcoords = strstr((char*)response,"X:");
-        if (pcoords)
+        //current values
+        x = machineInterface->ui->x_lcdNumber->value();
+        y = machineInterface->ui->y_lcdNumber->value();
+        z = machineInterface->ui->z_lcdNumber->value();
+
+        pXcoords = strstr((char*)response,"X:");
+        if (pXcoords)
         {
-            sscanf(pcoords,"X: %f;Y: %f;Z: %f;",&x,&y,&z);
-            machineDialog->ui->x_lcdNumber->display(x);
-            machineDialog->ui->y_lcdNumber->display(y);
-            machineDialog->ui->z_lcdNumber->display(z);
+            sscanf_s(pXcoords,"X: %f;Y: %f;Z: %f;",&x,&y,&z);
+            machineInterface->ui->x_lcdNumber->display(x);
+            machineInterface->ui->y_lcdNumber->display(y);
+            machineInterface->ui->z_lcdNumber->display(z);
         }
-        pcoords =  strstr((char*)response,"Y:");
-        if (pcoords)
+        pYcoords =  strstr((char*)response,"Y:");
+        if (pYcoords)
         {
-            sscanf(pcoords,"Y: %f;Z: %f;",&y,&z);
-            machineDialog->ui->y_lcdNumber->display(y);
-            machineDialog->ui->z_lcdNumber->display(z);
+            sscanf_s(pYcoords,"Y: %f;Z: %f;",&y,&z);
+            machineInterface->ui->y_lcdNumber->display(y);
+            machineInterface->ui->z_lcdNumber->display(z);
         }
 
+        if (pXcoords && pYcoords) {
+            if (machineInterface->xSpindleLine)
+                machineInterface->scene->removeItem(machineInterface->xSpindleLine);
+            if (machineInterface->ySpindleLine)
+                machineInterface->scene->removeItem(machineInterface->ySpindleLine);
+	
+            machineInterface->xSpindleLine = machineInterface->scene->addLine(std::lround(x/2.)-5, std::lround(200.-y/2.), std::lround(x/2.)+5, std::lround(200.-y/2.), whitePen);
+            machineInterface->xSpindleLine->setZValue(1);
+            machineInterface->ySpindleLine = machineInterface->scene->addLine(std::lround(x/2.), std::lround(200.-y/2.)-5, std::lround(x/2.), std::lround(200.-y/2.)+5, whitePen);
+            machineInterface->ySpindleLine->setZValue(1);
+        }
 
-        if (machineDialog->xSpindleLine)
-            machineDialog->scene->removeItem(machineDialog->xSpindleLine);
-        if (machineDialog->ySpindleLine)
-            machineDialog->scene->removeItem(machineDialog->ySpindleLine);
-
-        machineDialog->xSpindleLine = machineDialog->scene->addLine(std::lround(x/2.)-5, std::lround(200.-y/2.), std::lround(x/2.)+5, std::lround(200.-y/2.), whitePen);
-        machineDialog->xSpindleLine->setZValue(1);
-        machineDialog->ySpindleLine = machineDialog->scene->addLine(std::lround(x/2.), std::lround(200.-y/2.)-5, std::lround(x/2.), std::lround(200.-y/2.)+5, whitePen);
-        machineDialog->ySpindleLine->setZValue(1);
-
-
-        pcoords =  strstr((char*)response,"Z:");
-        if (pcoords)
+        pZcoords =  strstr((char*)response,"Z:");
+        if (pZcoords)
         {
-            sscanf(pcoords,"Z: %f;",&z);
-            machineDialog->ui->z_lcdNumber->display(z);
+            sscanf_s(pZcoords,"Z: %f;",&z);
+            machineInterface->ui->z_lcdNumber->display(z);
         }
 
         pmode =  strstr((char*)response,"MD:");
         if (pmode)
         {
-            char mod;
-            sscanf(pmode,"MD:%d;",&mod);
-            SetMode(mod);
+            int mod;
+            if (sscanf_s(pmode,"MD:%d;",&mod) == 1)
+                SetMode(mod);
             switch (GetMode())
             {
                 case 0:
                 {
-                    machineDialog->ui->localMode->setChecked(true);
-                    machineDialog->ui->lineMode->setEnabled(true);
-                    machineDialog->ui->fileMode->setEnabled(true);
-                    machineDialog->ui->dccMode->setEnabled(true);
-                    machineDialog->ui->label_Busy_Status->setPixmap(*(machineDialog->green));
+                    machineInterface->ui->localMode->setChecked(true);
+                    machineInterface->ui->lineMode->setEnabled(true);
+                    machineInterface->ui->fileMode->setEnabled(true);
+                    machineInterface->ui->dccMode->setEnabled(true);
+                    machineInterface->ui->label_Busy_Status->setPixmap(*(machineInterface->green));
                 }
                 break;
                 case 1:
                 {
-                    machineDialog->ui->localMode->setEnabled(true);
-                    machineDialog->ui->dccMode->setChecked(true);
-                    machineDialog->ui->lineMode->setEnabled(false);
-                    machineDialog->ui->fileMode->setEnabled(false);
+                    machineInterface->ui->localMode->setEnabled(true);
+                    machineInterface->ui->dccMode->setChecked(true);
+                    machineInterface->ui->lineMode->setEnabled(false);
+                    machineInterface->ui->fileMode->setEnabled(false);
                     //dccModeCtrl->ChangeGroupCheck();
-                    machineDialog->ui->label_Busy_Status->setPixmap(*(machineDialog->green));
+                    machineInterface->ui->label_Busy_Status->setPixmap(*(machineInterface->green));
                 }
                 break;
                 case 2:
                 {
-                    machineDialog->ui->localMode->setEnabled(true);
-                    machineDialog->ui->dccMode->setEnabled(false);
-                    machineDialog->ui->lineMode->setChecked(true);
-                    machineDialog->ui->fileMode->setEnabled(false);
-                    machineDialog->ui->label_Busy_Status->setPixmap(*(machineDialog->green));
+                    machineInterface->ui->localMode->setEnabled(true);
+                    machineInterface->ui->dccMode->setEnabled(false);
+                    machineInterface->ui->lineMode->setChecked(true);
+                    machineInterface->ui->fileMode->setEnabled(false);
+                    machineInterface->ui->label_Busy_Status->setPixmap(*(machineInterface->green));
                 }
                 break;
                 case 3:
                 {
-                    machineDialog->ui->localMode->setEnabled(true);
-                    machineDialog->ui->dccMode->setEnabled(false);
-                    machineDialog->ui->lineMode->setChecked(false);
-                    machineDialog->ui->fileMode->setChecked(true);
-                    machineDialog->ui->label_Busy_Status->setPixmap(*(machineDialog->green));
+                    machineInterface->ui->localMode->setEnabled(true);
+                    machineInterface->ui->dccMode->setEnabled(false);
+                    machineInterface->ui->lineMode->setChecked(false);
+                    machineInterface->ui->fileMode->setChecked(true);
+                    machineInterface->ui->label_Busy_Status->setPixmap(*(machineInterface->green));
                 }
                 break;
                 case 4: //busy
                 {
-                    machineDialog->ui->label_Busy_Status->setPixmap(*(machineDialog->red));
+                    machineInterface->ui->label_Busy_Status->setPixmap(*(machineInterface->red));
                 }
             }
         }
@@ -773,23 +782,24 @@ void CSPXRobbyController::checkResponse(QString serialResponse)
         response = "";
     }
 
-    //emit changeSpindleCoordinates(machineDialog->ui->xHome->value()+machineDialog->ui->x_lcdNumber->value(), machineDialog->ui->yHome->value() + machineDialog->ui->y_lcdNumber->value(), machineDialog->ui->zHome->value()+machineDialog->ui->z_lcdNumber->value());
+    emit changeSpindleCoordinates(machineInterface->ui->xHome->value()+machineInterface->ui->x_lcdNumber->value(), machineInterface->ui->yHome->value() + machineInterface->ui->y_lcdNumber->value(), machineInterface->ui->zHome->value()+machineInterface->ui->z_lcdNumber->value());
 
 }
 
 void CSPXRobbyController::SendData(CSPXMessage &msg)
-{
+{   
+    if (machineInterface->ui->radioSerialButton->isChecked()) {
+        if (((CSPXCOMPort*)coms)->pinoutSignals() & QSerialPort::ClearToSendSignal)
+        {
+            ((CSPXCOMPort*)coms)->SendData(&msg);
+            machineInterface->ui->statusMessage->setPlainText(QString(msg.GetData()));
+        }
+        else
+            machineInterface->ui->statusMessage->setPlainText(QString("CTS not asserted"));
 
-    if (coms->pinoutSignals() & QSerialPort::ClearToSendSignal)
-    {
-        coms->SendData(&msg);
-        machineDialog->ui->statusMessage->setPlainText(QString(msg.GetData()));
+
+        ((CSPXCOMPort*)GetComs())->waitForBytesWritten(300);
     }
-    else
-        machineDialog->ui->statusMessage->setPlainText(QString("CTS not asserted"));
-
-
-    GetComs()->waitForBytesWritten(300);
 }
 
 void SerialReceiverThread::pause()

@@ -1,9 +1,9 @@
 #include "cspxvector.h"
 
 #include <math.h>
-#include <cstdio>
 #include <stdarg.h>
 #include <cstring>
+#include <stdlib.h>
 
 #include "cspxutility.h"
 #include "cspxvector.h"

@@ -38,12 +38,12 @@ public slots:
 
 public:
     bool isConnected() { return connected; }
-    CSPXCOMPort *GetComs() { return coms; }
+    CSPXCommunicationChannel *GetComs() { return coms; }
 
     /*!
      *  opens port and resumes reader thread
      */
-    bool connectRS232Comms();
+    bool connectComms();
 
     /*!
      *  send commands from the user interface
@@ -63,10 +63,10 @@ public:
     /*!
      *  suspends thread and closes port
      */
-    void disconnectRS232Comms();
+    void disconnectComms();
 
-    static void SetMachineDialog(MainWindow *dlg) { machineDialog = dlg; }
-    static MainWindow *GetMachineDialog() { return machineDialog; }
+    static void SetMachineWindow(MainWindow *wnd) { machineInterface = wnd; }
+    static MainWindow *GetMainWindow() { return machineInterface; }
 
     public: CSPXString response;
     public: char GetMode() { return mode; }
@@ -78,16 +78,16 @@ public slots:
         void checkBusyState();
 
     private:
-        static MainWindow *machineDialog;
+        static MainWindow *machineInterface;
 
-    CSPXCOMPort *coms;
+    CSPXCommunicationChannel *coms = nullptr;
     QFile file;
     QTimer busyTimer;
 
     bool connected;
     char mode;
 
-    SerialReceiverThread *receiverThread;
+    SerialReceiverThread *receiverThread = nullptr;
 
     char lastHpglCommand[128];
 

@@ -8,6 +8,8 @@
 #include "CNC/cspxcheckboxdelegate.h"
 #include "Containers/cspxvector.h"
 
+#include "CNC/cspxopengldialog.h"
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -25,9 +27,29 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::closeEvent(QCloseEvent *event) {
+
+    auto reply = QMessageBox::question(
+        this,
+        "Confirm Exit",
+        "Are you sure you want to exit?",
+        QMessageBox::Yes | QMessageBox::No
+    );
+
+    if (reply == QMessageBox::Yes) {
+
+        robbyController.disconnectComms();
+
+        event->accept();
+    } else {
+        event->ignore();
+    }
+}
+
+
 void MainWindow::Initialize()
 {
-    robbyController.SetMachineDialog(this);
+    robbyController.SetMachineWindow(this);
 
     ui->toolSafetyCheckBox->setChecked(false);
     ui->zSafetyStep->setText("40.0");
@@ -98,6 +120,8 @@ void MainWindow::Initialize()
         qDebug() << "\nPort:" << serialPortInfo.portName();
         ui->serialComboBox->addItem(serialPortInfo.portName());
     }
+    //scan for BLE target devices ?
+
 
     ui->label_CTS_Status->setPixmap(*red);
     ui->label_Busy_Status->setPixmap(*red);
@@ -145,7 +169,7 @@ void MainWindow::on_connectButton_clicked()
     if (robbyController.isConnected())
     {
         ui->connectButton->setText(QString("Connect"));
-        robbyController.disconnectRS232Comms();
+        robbyController.disconnectComms();
         ui->moveWorkpieceToXYHomePositionButton->setEnabled(false);
 
         robbyController.SetMode(-1);
@@ -184,7 +208,7 @@ void MainWindow::on_connectButton_clicked()
         ui->z_lcdNumber->display(0.000);
 
         //reconnect
-        robbyController.connectRS232Comms();
+        robbyController.connectComms();
         if (robbyController.isConnected())
         {
             ui->moveWorkpieceToXYHomePositionButton->setEnabled(true);
@@ -825,28 +849,15 @@ void FileModeCheckThread::resume()
 }
 
 
-// void MainWindow::on_viewSourceFile_clicked()
-// {
-//     if (cncFile)
-//     {
-//         if (hpglDialog==nullptr)
-//         {
-//             hpglDialog = new CSPXHPGLDialog(this);
-//             hpglDialog->setAttribute(Qt::WA_DeleteOnClose);
-//         }
-//         //hpglDialog->loadhpgl(fileName);
-//         ui->moveWorkpieceToXYHomePositionButton->setEnabled(false);
-//         hpglDialog->sendhpgl(this,cncFile);
-
-//         connect(&robbyController,&CSPXRobbyController::changeSpindleCoordinates, hpglDialog, &CSPXHPGLDialog::updateSpindleCoordinates);
-
-//         hpglDialog->setModal(false);
-//         hpglDialog->show();
-//         //hpglDialog->raise();
-//         hpglDialog->activateWindow();
-//         connect(hpglDialog, &CSPXHPGLDialog::hpglDialogClosed, this, &MainWindow::hpglDialogClosing);
-//     }
-// }
+void MainWindow::on_viewSourceFile_clicked()
+{
+    if (hpglCommands != nullptr)
+        if (!hpglCommands->polyLine.empty()) {
+            CSPXOpenGLDialog glDialog(this);
+            glDialog.setCNCData(hpglCommands);
+            glDialog.exec();
+        }
+}
 
 void MainWindow::hpglDialogClosing()
 {
@@ -868,7 +879,8 @@ void MainWindow::on_moveWorkpieceToXYHomePositionButton_clicked()
     else
     {
         //this translates to the origin of the home position
-        hpglCommands->TranslateBy(-hpglCommands->x_min,-hpglCommands->y_min,0.0);
+        hpglCommands->TranslateXBy(-hpglCommands->x_min);
+        hpglCommands->TranslateYBy(-hpglCommands->y_min);
 
         ui->xOrigin->setText(QString::number(hpglCommands->x_min/40.)+" mm");
         ui->yOrigin->setText(QString::number(hpglCommands->y_min/40.)+" mm");

@@ -19,8 +19,10 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     cmdEdit_ = new QLineEdit;
     cmdEdit_->setPlaceholderText(tr("Type command (e.g., STATUS)"));
     sendBtn_ = new QPushButton(tr("Send"));
+    sendFSBtn_ = new QPushButton(tr("FS_Cmd"));
     row2->addWidget(cmdEdit_, 1);
     row2->addWidget(sendBtn_);
+    row2->addWidget(sendFSBtn_);
     layout->addLayout(row2);
 
     statusLbl_ = new QLabel(tr("Idle"));
@@ -34,6 +36,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     // --- Signals ---
     connect(scanBtn_, &QPushButton::clicked, this, &MainWindow::startScan);
     connect(sendBtn_, &QPushButton::clicked, this, &MainWindow::sendCommand);
+    connect(sendFSBtn_, &QPushButton::clicked, this, &MainWindow::sendFSCommand);
 
     bleCtrl = new BLEController();
 }
@@ -44,8 +47,6 @@ void MainWindow::startScan() {
     bleCtrl->setMainWindow(this);
     bleCtrl->startBLE();
 }
-
-
 
 void MainWindow::sendCommand() {
 	
@@ -59,6 +60,17 @@ void MainWindow::sendCommand() {
     bleCtrl->sendData(text);
 }
 
+void MainWindow::sendFSCommand() {
+
+    auto text = cmdEdit_->text().toUtf8();
+    if (text.isEmpty()) return;
+    if (!text.endsWith('\n'))
+        text.append('\n');  // newline framing
+
+    log("Sending:"); log(text);
+
+    bleCtrl->sendFSData(text);
+}
 
 void MainWindow::log(const QString& line) {
     logView_->append(line);

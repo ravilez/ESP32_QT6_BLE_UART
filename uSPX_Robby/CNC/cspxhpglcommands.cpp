@@ -1,8 +1,12 @@
 #include "cspxhpglcommands.h"
 #include <stdio.h>
+#include <cstring>
 #include <math.h>
 
 #include <QByteArray>
+#include <QVector>
+#include <QVector3D>
+#include <QRegularExpression>
 
 CSPXHpglCommands::CSPXHpglCommands()
 {
@@ -64,7 +68,7 @@ int CSPXHpglCommands::LoadCommands(const char *data, int length)
 {
     const char* pdata = data;
     char command[32];
-    int limit = 32;
+    const int limit = 32;
     char spindle_on_off;
     int z_coord;
     int x_coord;
@@ -76,10 +80,25 @@ int CSPXHpglCommands::LoadCommands(const char *data, int length)
     float xy_mill_speed;
     int wait_time;
     int tool_index;
+    char tool_desc[256];
+    char tool_units[8];
+    double tool_diameter;
+
+    double speed;
+    double max_milling_speed = 0.; //mm/s
+    double max_up_speed = 0.; //mm/s
+    double max_down_speed = 0.; //mm/s
+    double current_X = 0.0, current_Y = 0.0, current_Z = 0.0;
+
 
     unsigned int fileIndex = 0;
 
     struct s_command scommand;
+
+    polyLine.clear();
+
+    QVector3D v(current_X, current_Y, current_Z);
+    polyLine.append(v);
 
     while(*pdata != '\0')
     {
@@ -87,7 +106,7 @@ int CSPXHpglCommands::LoadCommands(const char *data, int length)
         while(*pdata == '\r' || *pdata == '\n' || *pdata == ' ')
             pdata++;
 
-        memset(command,0,32);
+        memset(command,0,sizeof(command));
         char *pCommand = &command[0];
         int commandLength = 0;
         while(*pdata != '\0' && *pdata != ';' && commandLength < limit)
@@ -104,53 +123,63 @@ int CSPXHpglCommands::LoadCommands(const char *data, int length)
         pdata++; //next command or cr,nl
 
         memset(&scommand,0,sizeof(struct s_command));
+        strncpy(&scommand.line[0],command,commandLength);
         if (command[0] == '@')
         {
             if (command[1] == 'Z' && command[2] == 'A') //@ZA
             {
-                sscanf(&command[3],"%d",&z_coord);
-                strcpy(scommand.code,"@ZA");
+                sscanf_s(&command[3],"%d",&z_coord);
+                strcpy_s(scommand.code,"@ZA");
                 scommand.z = z_coord;
+                current_Z = z_coord;
+
+                QVector3D v(current_X/10000., current_Y/10000., current_Z/10000.);
+                polyLine.append(v);
+
                 z_max = fmax(scommand.z,z_max);
                 z_min = fmin(scommand.z,z_min);
             }
             else if (command[1] == 'Z' && command[2] == 'R') //@ZR
             {
-                sscanf(&command[3],"%d",&z_coord);
-                strcpy(scommand.code,"@ZR");
+                sscanf_s(&command[3],"%d",&z_coord);
+                strcpy_s(scommand.code,"@ZR");
                 scommand.z = z_coord;
+                current_Z += z_coord;
+
+                QVector3D v(current_X/10000., current_Y/10000., current_Z/10000.);
+                polyLine.append(v);
             }
             else if (command[1] == 'Z' && command[2] == 'U') //@ZU
             {
-                sscanf(&command[3],"%f",&z_up_speed);
-                strcpy(scommand.code,"@ZU");
+                sscanf_s(&command[3],"%f",&z_up_speed);
+                strcpy_s(scommand.code,"@ZU");
                 scommand.zup_speed = z_up_speed;
             }
             else if (command[1] == 'Z' && command[2] == 'D') //@ZD
             {
-                sscanf(&command[3],"%f",&z_down_speed);
-                strcpy(scommand.code,"@ZD");
+                sscanf_s(&command[3],"%f",&z_down_speed);
+                strcpy_s(scommand.code,"@ZD");
                 scommand.zdown_speed = z_down_speed;
             }
             else if (command[1] == 'Z' && command[2] == 'S') //@ZS
             {
-                sscanf(&command[3],"%f,%f",&z_up_speed,&z_down_speed);
+                sscanf_s(&command[3],"%f,%f",&z_up_speed,&z_down_speed);
 
-                strcpy(scommand.code,"@ZS");
+                strcpy_s(scommand.code,"@ZS");
                 scommand.zup_speed = z_up_speed;
                 scommand.zdown_speed = z_down_speed;
             }
             else if (command[1] == 'Z' && command[2] == 'V') //@ZV
             {
-                sscanf(&command[3],"%f,%f",&xy_travel_speed,&xy_mill_speed);
-                strcpy(scommand.code,"@ZV");
+                sscanf_s(&command[3],"%f,%f",&xy_travel_speed,&xy_mill_speed);
+                strcpy_s(scommand.code,"@ZV");
                 scommand.xyup_speed = xy_travel_speed;
                 scommand.xydown_speed = xy_mill_speed;
             }
             else if (command[1] == 'Z' && command[2] == 'W') //@ZW
             {
-                sscanf(&command[3],"%d",&wait_time);
-                strcpy(scommand.code,"@ZW");
+                sscanf_s(&command[3],"%d",&wait_time);
+                strcpy_s(scommand.code,"@ZW");
                 scommand.u_tool_time.wait_time = wait_time;
             }
             else if (command[1] == 'Z' && command[2] == 'P') //@ZP
@@ -159,13 +188,13 @@ int CSPXHpglCommands::LoadCommands(const char *data, int length)
             }
             else if (command[1] == 'S' && command[2] == 'S') //@SS
             {
-                sscanf(&command[3],"%c",&spindle_on_off);
+                sscanf_s(&command[3],"%d",&spindle_on_off);
                 scommand.u_tool_time.wait_time = spindle_on_off;
             }
             else if (command[1] == 'W' && command[2] == 'T') //@WT
             {
-                sscanf(&command[3],"%d",&wait_time);
-                strcpy(scommand.code,"@WT");
+                sscanf_s(&command[3],"%d",&wait_time);
+                strcpy_s(scommand.code,"@WT");
                 scommand.u_tool_time.wait_time = wait_time;
             }
             else if (command[1] == 'T' && command[2] == 'C') //@TC
@@ -178,22 +207,43 @@ int CSPXHpglCommands::LoadCommands(const char *data, int length)
             if (command[0] == 'T') //Tool change
             {
                 fileIndex++;
-                sscanf(&command[0],"T:%d",&tool_index);
-                strcpy(scommand.code,&command[0]);
+                //CSPXUtility::strip(hpglbuffer,' ');
+                if (command[1] == ':')
+                {
+                    QRegularExpression regExp("T:\\d");
+                    QString toolIndex, toolDesc, toolDiameter;
+                    QRegularExpressionMatch match = regExp.match(QString(command));
+                    if (match.hasMatch()) {
+                        toolIndex = match.captured(1);
+                        toolDesc = match.captured(2);
+                        toolDiameter = match.captured(3);
+                    }
+                    tool_index = toolIndex.toInt();
+                    strcpy_s(tool_desc,toolDesc.toStdString().c_str());
+                    tool_diameter = toolDiameter.toFloat();
+                }
+
+                strcpy_s(scommand.code,&command[0]);
                 scommand.u_tool_time.tool_index = tool_index;
-           }
+            }
             else if (command[0] == 'V' && command[1] == 'S') //VS
             {
-                sscanf(&command[2],"%f",&xy_travel_speed);
-                strcpy(scommand.code,"VS");
+                sscanf_s(&command[2],"%f",&xy_travel_speed);
+                strcpy_s(scommand.code,"VS");
                 scommand.xy_speed = xy_travel_speed;
             }
             else if (command[0] == 'P' && command[1] == 'A') //PA
             {
-                sscanf(&command[2],"%d,%d",&x_coord,&y_coord);
-                strcpy(scommand.code,"PA");
+                sscanf_s(&command[2],"%d,%d",&x_coord,&y_coord);
+                strcpy_s(scommand.code,"PA");
                 scommand.x = x_coord;
                 scommand.y = y_coord;
+                current_X = x_coord;
+                current_Y = y_coord;
+
+                QVector3D v(current_X/10000., current_Y/10000., current_Z/10000.);
+                polyLine.append(v);
+
                 x_max = fmax(scommand.x,x_max);
                 y_max = fmax(scommand.y,y_max);
                 x_min = fmin(scommand.x,x_min);
@@ -201,34 +251,44 @@ int CSPXHpglCommands::LoadCommands(const char *data, int length)
             }
             else if (command[0] == 'P' && command[1] == 'R') //PR
             {
-                sscanf(&command[2],"%d,%d",&x_coord,&y_coord);
-                strcpy(scommand.code,"PR");
+                sscanf_s(&command[2],"%d,%d",&x_coord,&y_coord);
+                strcpy_s(scommand.code,"PR");
                 scommand.x = x_coord;
                 scommand.y = y_coord;
+
+                current_X += x_coord;
+                current_Y += y_coord;
+                QVector3D v(current_X/10000., current_Y/10000., current_Z/10000.);
+                polyLine.append(v);
+
+                x_min = fmin(x_min,current_X);
+                y_min = fmin(y_min,current_X);
+                x_max = fmax(x_max,current_X);
+                y_max = fmax(y_max,current_X);
             }
             else if (command[0] == 'P' && command[1] == 'U') //PU
             {
-                strcpy(scommand.code,"PU");
+                strcpy_s(scommand.code,"PU");
             }
             else if (command[0] == 'P' && command[1] == 'D') //PD
             {
-                strcpy(scommand.code,"PD");
+                strcpy_s(scommand.code,"PD");
             }
             else if (command[0] == 'O' && command[1] == 'A') //OA
             {
-                strcpy(scommand.code,"OA");
+                strcpy_s(scommand.code,"OA");
             }
             else if (command[0] == 'O' && command[1] == 'C') //OC
             {
-                strcpy(scommand.code,"OC");
+                strcpy_s(scommand.code,"OC");
             }
             else if (command[0] == 'O' && command[1] == 'F') //OF
             {
-                strcpy(scommand.code,"OF");
+                strcpy_s(scommand.code,"OF");
             }
             else if (command[0] == 'O' && command[1] == 'I') //OI
             {
-                strcpy(scommand.code,"OI");
+                strcpy_s(scommand.code,"OI");
             }
 
         }
@@ -241,12 +301,15 @@ int CSPXHpglCommands::LoadCommands(const char *data, int length)
 
             fileChunks = fileIndex +1;
         }
+
     }
+
+    last_dx = last_dy = last_dz = 0.;
 
     return 0;
 }
 
-bool CSPXHpglCommands::TranslateBy(int dx, int dy, int dz)
+bool CSPXHpglCommands::TranslateXBy(int dx)
 {
 
     for (int i = 0; i < fileChunks; i++)
@@ -257,12 +320,11 @@ bool CSPXHpglCommands::TranslateBy(int dx, int dy, int dz)
             struct s_command *cmd = cmdNodes->GetElement();
             if (!strcmp(cmd->code,"PA"))
             {
+                cmd->x -= last_dx;
+
                 cmd->x += dx;
-                cmd->y += dy;
-            }
-            else if (!strcmp(cmd->code,"@ZA"))
-            {
-                cmd->z += dz;
+
+                sprintf(&cmd->line[0],"%s %d,%d",cmd->code,cmd->x,cmd->y);
             }
             cmdNodes = cmdNodes->GetNext();
         }
@@ -271,17 +333,46 @@ bool CSPXHpglCommands::TranslateBy(int dx, int dy, int dz)
 
     x_min += dx;
     x_max += dx;
-    y_min += dy;
-    y_max += dy;
-    z_min += dz;
-    z_max += dz;
+
+    last_dx = dx;
 
     return true;
 }
 
+bool CSPXHpglCommands::TranslateYBy(int dy)
+{
+
+    for (int i = 0; i < fileChunks; i++)
+    {
+        CSPXListNode<struct s_command> *cmdNodes = commandList[i].GetHead();
+        while(cmdNodes)
+        {
+            struct s_command *cmd = cmdNodes->GetElement();
+            if (!strcmp(cmd->code,"PA"))
+            {
+                cmd->y -= last_dy;
+
+                cmd->y += dy;
+
+                sprintf(&cmd->line[0],"%s %d,%d",cmd->code,cmd->x,cmd->y);
+            }
+            cmdNodes = cmdNodes->GetNext();
+        }
+
+    }
+
+    y_min += dy;
+    y_max += dy;
+
+    last_dy = dy;
+
+    return true;
+}
+
+
 bool CSPXHpglCommands::FlipY()
 {
-    int cy = (y_max-y_min)/2.;
+    int cx = (x_max+x_min)/2.;
 
     for (int i = 0; i < fileChunks; i++)
     {
@@ -291,9 +382,11 @@ bool CSPXHpglCommands::FlipY()
             struct s_command *cmd = cmdNodes->GetElement();
             if (!strcmp(cmd->code,"PA") || !strcmp(cmd->code,"PR"))
             {
-                cmd->y += (cy - cmd->y);
-                y_min = fmin(cmd->y,y_min);
-                y_max = fmin(cmd->y,y_max);
+                cmd->x = (2*cx - cmd->x);
+                sprintf(&cmd->line[0],"%s %d,%d",cmd->code,cmd->x,cmd->y);
+
+                x_min = fmin(cmd->x,x_min);
+                x_max = fmax(cmd->x,x_max);
             }
             cmdNodes = cmdNodes->GetNext();
         }
@@ -306,7 +399,7 @@ bool CSPXHpglCommands::FlipY()
 bool CSPXHpglCommands::FlipX()
 {
 
-    int cx = (x_max-x_min)/2.;
+    int cy = (y_max+y_min)/2.;
 
     for (int i = 0; i < fileChunks; i++)
     {
@@ -316,10 +409,11 @@ bool CSPXHpglCommands::FlipX()
             struct s_command *cmd = cmdNodes->GetElement();
             if (!strcmp(cmd->code,"PA") || !strcmp(cmd->code,"PR"))
             {
-                cmd->x += (cx - cmd->x);
+                cmd->y = (2*cy - cmd->y);
+                sprintf(&cmd->line[0],"%s %d,%d",cmd->code,cmd->x,cmd->y);
 
-                x_min = fmin(cmd->x,x_min);
-                x_max = fmin(cmd->x,x_max);
+                y_min = fmin(cmd->y,y_min);
+                y_max = fmax(cmd->y,y_max);
             }
             cmdNodes = cmdNodes->GetNext();
         }
@@ -349,10 +443,13 @@ bool CSPXHpglCommands::Rotate()
                 temp = cmd->x;
                 cmd->x = cmd->y;
                 cmd->y = temp;
+
+                sprintf(&cmd->line[0],"%s %d,%d",cmd->code,cmd->x,cmd->y);
+
                 x_min = fmin(cmd->x,x_min);
                 y_min = fmin(cmd->y,y_min);
-                x_max = fmin(cmd->x,x_max);
-                y_max = fmin(cmd->y,y_max);
+                x_max = fmax(cmd->x,x_max);
+                y_max = fmax(cmd->y,y_max);
             }
             cmdNodes = cmdNodes->GetNext();
         }

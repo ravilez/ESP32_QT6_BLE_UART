@@ -12,6 +12,7 @@ public:
 private slots:
     void startScan();
     void sendCommand();
+    void sendFSCommand();
 
 public:
     void log(const QString& line);
@@ -23,6 +24,7 @@ private:
     QTextEdit* logView_{};
     QLineEdit* cmdEdit_{};
     QPushButton* sendBtn_{};
+    QPushButton* sendFSBtn_{};
     QLabel* statusLbl_{};
 
 

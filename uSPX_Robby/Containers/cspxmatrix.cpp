@@ -1,9 +1,8 @@
 #include <math.h>
-#include <cstdio>
 #include <stdarg.h>
 #include <cstring>
 
-//#include <xmmintrin.h>
+#include <initializer_list>
 
 #include "cspxutility.h"
 #include "cspxvector.h"
@@ -145,19 +144,18 @@ CSPXMatrix::CSPXMatrix(const CSPXVector &rval)
         memcpy(matrix[0],rval.vector,size*sizeof(double));
 }
 
-CSPXMatrix::CSPXMatrix(int rows, CSPXVector &v1, ...)
-{
-    Initialize(rows,v1.GetDimension());
-    va_list puntaList;
-    //va_start(puntaList,v1);
-    int i;
-    memcpy(matrix[0],v1,v1.GetDimension()*sizeof(double));
-    for(i = rows - 1; i > 0; i--)
-    {
-        double *p = va_arg(puntaList,double*);
-        memcpy(matrix[i],p,v1.GetDimension()*sizeof(double));
+CSPXMatrix::CSPXMatrix(std::initializer_list<CSPXVector> rows)
+{    
+    const int r = static_cast<int>(rows.size());
+    const int c = rows.begin()->GetDimension();
+    Initialize(r,c);
+
+
+    int i = 0;
+    for (const auto& v : rows) {
+        // (Optional) check v.GetDimension() == c
+        std::memcpy(matrix[i++], v.vector, static_cast<size_t>(c) * sizeof(double));
     }
-    va_end(puntaList);
 }
 
 CSPXMatrix::~CSPXMatrix()
@@ -859,7 +857,6 @@ void CSPXMatrix::gaussj2()
                     {
                         Error((char*)"gaussj: Singular Matrix-1");
                         delete [] ipiv;
-                        delete [] indxc;
                     }
                 }
             }

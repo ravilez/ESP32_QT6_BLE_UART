@@ -157,12 +157,12 @@ void BLEController::serviceScanDone()
 void BLEController::characteristicChanged(const QLowEnergyCharacteristic &characteristic, const QByteArray &value)
 {
     if (characteristic.uuid() == QBluetoothUuid(CHARACTERISTIC_TX_UUID)) {
-        mainWindow->log("Characteristic TX value changed:" + value);
+        mainWindow->log("Characteristic TX value changed:\n" + value);
         m_distance = value.toFloat();
         emit distanceChanged();
     }
     else if (characteristic.uuid() == QBluetoothUuid(CHARACTERISTIC_FS_UUID)) {
-        mainWindow->log("Characteristic FS value changed:" + value);
+        mainWindow->log("Characteristic FS value changed:\n" + value);
     }
 }
 
@@ -170,4 +170,10 @@ void BLEController::sendData(const QByteArray &value)
 {
     if (characteristic_rx.isValid())
         service->writeCharacteristic(characteristic_rx,value,QLowEnergyService::WriteWithoutResponse);
+}
+
+void BLEController::sendFSData(const QByteArray &value)
+{
+    if (characteristic_fs.isValid())
+        service->writeCharacteristic(characteristic_fs,value,QLowEnergyService::WriteWithoutResponse);
 }

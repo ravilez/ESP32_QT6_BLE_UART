@@ -1,13 +1,13 @@
 /********************************************************************************
-** Form generated from reading UI file 'mainwindowIPHKfq.ui'
+** Form generated from reading UI file 'mainwindowIUBOKg.ui'
 **
-** Created by: Qt User Interface Compiler version 6.8.2
+** Created by: Qt User Interface Compiler version 6.9.0
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
 
-#ifndef MAINWINDOWIPHKFQ_H
-#define MAINWINDOWIPHKFQ_H
+#ifndef MAINWINDOWIUBOKG_H
+#define MAINWINDOWIUBOKG_H
 
 #include <QtCore/QVariant>
 #include <QtGui/QIcon>
@@ -68,7 +68,6 @@ public:
     QRadioButton *localMode;
     QRadioButton *dccMode;
     QRadioButton *lineMode;
-    QComboBox *serialComboBox;
     QPushButton *zupButton;
     QPushButton *zdownButton;
     QTextEdit *statusMessage;
@@ -104,10 +103,14 @@ public:
     QDoubleSpinBox *travelSpeedSpinBox;
     QLabel *origin_label;
     QLabel *xyHome_label;
-    QLabel *dx_label_2;
     QPushButton *closeFileButton;
     CSPXTableView *tableView;
     CSPXGraphicsView *workspace;
+    QGroupBox *groupComms;
+    QLineEdit *targetBLE;
+    QRadioButton *radioSerialButton;
+    QRadioButton *radioBLEButton;
+    QComboBox *serialComboBox;
 
     void setupUi(QMainWindow *MainWindow)
     {
@@ -244,16 +247,16 @@ public:
         robby_label = new QLabel(centralwidget);
         robby_label->setObjectName("robby_label");
         robby_label->setEnabled(true);
-        robby_label->setGeometry(QRect(560, 10, 91, 71));
+        robby_label->setGeometry(QRect(530, 10, 91, 71));
         robby_label->setStyleSheet(QString::fromUtf8("background-image: url(:/Images/Profiler.png);"));
         robby_label->setPixmap(QPixmap(QString::fromUtf8(":/resource/Images/Profiler.png")));
         robby_label->setScaledContents(true);
         connectButton = new QPushButton(centralwidget);
         connectButton->setObjectName("connectButton");
-        connectButton->setGeometry(QRect(698, 60, 81, 31));
+        connectButton->setGeometry(QRect(698, 130, 81, 31));
         groupBox = new QGroupBox(centralwidget);
         groupBox->setObjectName("groupBox");
-        groupBox->setGeometry(QRect(550, 120, 120, 111));
+        groupBox->setGeometry(QRect(520, 120, 120, 111));
         fileMode = new QRadioButton(groupBox);
         fileMode->setObjectName("fileMode");
         fileMode->setGeometry(QRect(10, 80, 101, 17));
@@ -267,9 +270,6 @@ public:
         lineMode = new QRadioButton(groupBox);
         lineMode->setObjectName("lineMode");
         lineMode->setGeometry(QRect(10, 60, 101, 17));
-        serialComboBox = new QComboBox(centralwidget);
-        serialComboBox->setObjectName("serialComboBox");
-        serialComboBox->setGeometry(QRect(698, 30, 81, 22));
         zupButton = new QPushButton(centralwidget);
         zupButton->setObjectName("zupButton");
         zupButton->setGeometry(QRect(120, 120, 32, 32));
@@ -323,7 +323,7 @@ public:
         rightdownButton->setFlat(false);
         openFileButton = new QPushButton(centralwidget);
         openFileButton->setObjectName("openFileButton");
-        openFileButton->setGeometry(QRect(698, 130, 81, 31));
+        openFileButton->setGeometry(QRect(698, 170, 81, 31));
         label_Filename = new QLabel(centralwidget);
         label_Filename->setObjectName("label_Filename");
         label_Filename->setGeometry(QRect(20, 340, 281, 16));
@@ -349,10 +349,10 @@ public:
         CTS_label->setGeometry(QRect(200, 300, 31, 16));
         sendFileButton = new QPushButton(centralwidget);
         sendFileButton->setObjectName("sendFileButton");
-        sendFileButton->setGeometry(QRect(698, 210, 81, 31));
+        sendFileButton->setGeometry(QRect(698, 250, 81, 31));
         modeButton = new QPushButton(centralwidget);
         modeButton->setObjectName("modeButton");
-        modeButton->setGeometry(QRect(550, 250, 81, 31));
+        modeButton->setGeometry(QRect(520, 240, 81, 31));
         setXYHomeButton = new QPushButton(centralwidget);
         setXYHomeButton->setObjectName("setXYHomeButton");
         setXYHomeButton->setGeometry(QRect(390, 20, 32, 32));
@@ -377,7 +377,7 @@ public:
         setXYZHomeButton->setIconSize(QSize(32, 32));
         viewSourceFile = new QPushButton(centralwidget);
         viewSourceFile->setObjectName("viewSourceFile");
-        viewSourceFile->setGeometry(QRect(698, 170, 81, 31));
+        viewSourceFile->setGeometry(QRect(698, 210, 81, 31));
         label_Busy_Status = new QLabel(centralwidget);
         label_Busy_Status->setObjectName("label_Busy_Status");
         label_Busy_Status->setGeometry(QRect(240, 320, 41, 21));
@@ -408,7 +408,7 @@ public:
         y0->setGeometry(QRect(210, 370, 16, 16));
         HelpButton = new QPushButton(centralwidget);
         HelpButton->setObjectName("HelpButton");
-        HelpButton->setGeometry(QRect(698, 290, 81, 31));
+        HelpButton->setGeometry(QRect(698, 330, 81, 31));
         savedPositionBox = new QComboBox(centralwidget);
         savedPositionBox->setObjectName("savedPositionBox");
         savedPositionBox->setGeometry(QRect(300, 320, 101, 25));
@@ -431,12 +431,9 @@ public:
         xyHome_label = new QLabel(centralwidget);
         xyHome_label->setObjectName("xyHome_label");
         xyHome_label->setGeometry(QRect(480, 320, 51, 21));
-        dx_label_2 = new QLabel(centralwidget);
-        dx_label_2->setObjectName("dx_label_2");
-        dx_label_2->setGeometry(QRect(700, 10, 81, 20));
         closeFileButton = new QPushButton(centralwidget);
         closeFileButton->setObjectName("closeFileButton");
-        closeFileButton->setGeometry(QRect(700, 250, 81, 29));
+        closeFileButton->setGeometry(QRect(700, 290, 81, 29));
         tableView = new CSPXTableView(centralwidget);
         tableView->setObjectName("tableView");
         tableView->setGeometry(QRect(20, 400, 541, 131));
@@ -463,6 +460,23 @@ public:
         workspace->setSceneRect(QRectF(0, 0, 150, 200));
         workspace->setAlignment(Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop);
         workspace->setOptimizationFlags(QGraphicsView::OptimizationFlag::DontAdjustForAntialiasing);
+        groupComms = new QGroupBox(centralwidget);
+        groupComms->setObjectName("groupComms");
+        groupComms->setGeometry(QRect(640, 10, 141, 111));
+        targetBLE = new QLineEdit(groupComms);
+        targetBLE->setObjectName("targetBLE");
+        targetBLE->setGeometry(QRect(30, 70, 101, 21));
+        targetBLE->setReadOnly(false);
+        radioSerialButton = new QRadioButton(groupComms);
+        radioSerialButton->setObjectName("radioSerialButton");
+        radioSerialButton->setGeometry(QRect(10, 31, 21, 20));
+        radioSerialButton->setChecked(true);
+        radioBLEButton = new QRadioButton(groupComms);
+        radioBLEButton->setObjectName("radioBLEButton");
+        radioBLEButton->setGeometry(QRect(10, 71, 21, 20));
+        serialComboBox = new QComboBox(groupComms);
+        serialComboBox->setObjectName("serialComboBox");
+        serialComboBox->setGeometry(QRect(30, 30, 101, 22));
         MainWindow->setCentralWidget(centralwidget);
 
         retranslateUi(MainWindow);
@@ -540,7 +554,7 @@ public:
 "hr { height: 1px; border-width: 0; }\n"
 "li.unchecked::marker { content: \"\\2610\"; }\n"
 "li.checked::marker { content: \"\\2612\"; }\n"
-"</style></head><body style=\" font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
+"</style></head><body style=\" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'MS Shell Dlg 2'; font-size:8.25pt;\">Error messages</span></p></body></html>", nullptr));
         leftupButton->setText(QString());
         leftdownButton->setText(QString());
@@ -592,8 +606,14 @@ public:
         travelSpeed_label->setText(QCoreApplication::translate("MainWindow", "<html><head/><body><p>Travel speed</p></body></html>", nullptr));
         origin_label->setText(QCoreApplication::translate("MainWindow", "Origin", nullptr));
         xyHome_label->setText(QCoreApplication::translate("MainWindow", "<html><head/><body><p>mms<span style=\" vertical-align:super;\">-1</span></p></body></html>", nullptr));
-        dx_label_2->setText(QCoreApplication::translate("MainWindow", "COM Ports", nullptr));
         closeFileButton->setText(QCoreApplication::translate("MainWindow", "Close File", nullptr));
+        groupComms->setTitle(QCoreApplication::translate("MainWindow", "Comms", nullptr));
+#if QT_CONFIG(tooltip)
+        targetBLE->setToolTip(QCoreApplication::translate("MainWindow", "z Safety Step", nullptr));
+#endif // QT_CONFIG(tooltip)
+        targetBLE->setText(QCoreApplication::translate("MainWindow", "ESP32_BLE_UART", nullptr));
+        radioSerialButton->setText(QString());
+        radioBLEButton->setText(QString());
     } // retranslateUi
 
 };
@@ -604,4 +624,4 @@ namespace Ui {
 
 QT_END_NAMESPACE
 
-#endif // MAINWINDOWIPHKFQ_H
+#endif // MAINWINDOWIUBOKG_H

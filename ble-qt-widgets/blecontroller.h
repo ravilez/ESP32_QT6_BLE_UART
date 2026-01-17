@@ -31,6 +31,7 @@ public slots:
     void serviceScanDone();
     void characteristicChanged(const QLowEnergyCharacteristic &characteristic, const QByteArray &value);
     void sendData(const QByteArray &value);
+    void sendFSData(const QByteArray &value);
 
 signals:
     void distanceChanged();
